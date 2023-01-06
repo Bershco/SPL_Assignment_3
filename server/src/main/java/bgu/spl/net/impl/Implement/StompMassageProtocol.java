@@ -7,6 +7,9 @@ import bgu.spl.net.srv.Connections;
 
 public class StompMassageProtocol implements StompMessagingProtocol<String>{
 
+    //TODO : understand where do I get the receipt id
+    //TODO : when subscribe and unsubscribe we have a subscription id - where the fuch do I save it and what doest it representes
+    // second to do - probably in connectionImpl
  
     private String[] headers = {"CONNECT","SEND","UNSUBSCRIBE","SUBSCRIBE", "DISCONNECT"};
     private boolean shouldTerminate = false;
@@ -15,7 +18,6 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
 
     @Override
     public void start(int connectionId, Connections<String> connections) {
-        // TODO: Auto-generated method stub
         this.connections = connections;
         owner = connectionId;
         
@@ -25,15 +27,31 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
     public void process(String message) {
         String[] split_message = splitFrame(message);
         String errorOrNot = isError(split_message);
+        String frame;
+        //TODO: understand what I send here for every frame and if others should be implemented in server
         if (errorOrNot.equals("DISCONNECT")){
             shouldTerminate = true;
-            String receipt = "RECEIPT" + "\n"+ "receipt-id:"+ owner +"\n"+ "^@";
+            String receipt = "RECEIPT" + "\n"+ "receipt-id:"+"NO IDEA WHERE TO GET IT FROM" +"\n"+ "^@";
             connections.send(owner, receipt);
             connections.disconnect(owner);
         }
-        else{
-            //SEND FRAMES AND ERROR
+        else if(errorOrNot.equals("CONNECT")){
+           frame = "CONNECTED" +"\n" + "version:1.2"+ "\n" + "^@";
+           connections.send(owner, frame);
         }
+        else if(errorOrNot.equals("SUBSCRIBE")){
+         
+        }
+        else if(errorOrNot.equals("UNSUBSCRIBE")){
+
+        }
+        else if(errorOrNot.equals("SEND")){
+
+        }
+        else{
+            connections.send(owner, errorOrNot);
+        }
+        
     }
         
     @Override
@@ -46,8 +64,11 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
         String[] splited = message.split(regex);
         return splited;
     }
+
+
+    //checks the correctness if the FRAME(headers and such)
     private String isError(String[] message){
-        //add if additional information to error
+        //todo: add if additional information to error - receipt number
         String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----";
         boolean is_header =false;
         for(int i=0; i <headers.length & !is_header;i++){
@@ -63,21 +84,20 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
             boolean hasEnd = message[message.length-1] == "^@";
             boolean hasId = hasId(message);
             if(message[0].equals("CONNECT")){
-                //TODO: IMPLEMENT
+                //TODO: check user and pasword and somehow connect the user and create a connection handler for him --> 
+                //some people say it should be implemented in server
             }
             else if(message[0].equals("SEND")){ 
-                if(!hasDest){
-                    ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain destination" + "^@";
-                    return ans;
+                if(!hasDest){ //has destination
+                    return ans + "\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain destination" + "^@";
                 }
-                if(!hasEnd){
-                    ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain destination" + "^@";
-                    return ans;
+                if(!hasEnd){ 
+                    return ans + "\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain destination" + "^@";   
                 }
-                if(message.length<=3){
-                    ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "frame has no body" + "^@";
-                    return ans;
+                if(message.length<=3){ //has all fields needed- such as body
+                    return ans + "\n" + message.toString() +"\n" +"----"+"\n" + "frame has no body" + "^@";
                 }
+                
             }
             else if(message[0].equals("SUBSCRIBE")){
                 if(!hasDest){
