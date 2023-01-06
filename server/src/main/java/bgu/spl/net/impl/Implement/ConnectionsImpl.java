@@ -12,6 +12,8 @@ import bgu.spl.net.srv.Connections;
 public class ConnectionsImpl<T> implements Connections<T>  {
     private List<ConnectionHandler<T>> connection_handlers= new LinkedList<>();
     private Map<Integer,String[]> topics = new HashMap<>();
+    private Map<Integer,Integer[]> subscriptions = new HashMap<>();
+    private Map<String,String> user_password = new HashMap<>();
     private Map<Integer,ConnectionHandler<T>> connectToClient = new HashMap<>();
     
     
@@ -50,6 +52,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     public void disconnect(int connectionId){
         connectToClient.remove(connectToClient);
         topics.remove(connectToClient);
+        subscriptions.remove(connectToClient);
     }
 
     public void connect(int connectionId){
