@@ -9,4 +9,8 @@ public interface Connections<T> {
     void send(String channel, T msg);
 
     void disconnect(int connectionId);
+    
+
+    //added:
+    boolean checkIfSubscribed(String channel,int connectionId);
 }

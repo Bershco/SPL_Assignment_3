@@ -10,17 +10,17 @@ import bgu.spl.net.srv.ConnectionHandler;
 import bgu.spl.net.srv.Connections;
 
 public class ConnectionsImpl<T> implements Connections<T>  {
-    private List<ConnectionHandler<T>> connection_handlers= new LinkedList<>();//not sure if I need this list
+    private List<ConnectionHandler<T>> connection_handlers= new LinkedList<>();
     private Map<Integer,String[]> topics = new HashMap<>();
     private Map<Integer,ConnectionHandler<T>> connectToClient = new HashMap<>();
     
     
-    public boolean send(int connectionId, T msg){ 
+    public boolean send(int connectionId, T msg){  //send messages to client
         connectToClient.get(connectionId).send(msg);
-        return false; //TODO: FIX THIS WTF
+        return false; //TODO: why we send boolean - find out
     }
 
-    public void send(String channel, T msg){
+    public void send(String channel, T msg){ // send messages to all clients that are part of this topic
         for(Integer id: topics.keySet()){
             String[] subs = topics.get(id);
             for(String topic : subs){
@@ -28,9 +28,24 @@ public class ConnectionsImpl<T> implements Connections<T>  {
                     send(id,msg);
                 }
             }
-        }
-        
+        }  
     }
+
+    public boolean checkIfSubscribed(String channel,int connectionId){
+        if(topics.containsKey(connectionId)){
+            String[] topics_per_client = topics.get(connectionId);
+            if(topics_per_client.length==0){
+                return false;
+            }
+            for(int i=0; i< topics_per_client.length;i++){
+                if(topics_per_client[i].equals(channel)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    //TODO: functions I think we might need: checkIfConnected,check if exists
 
     public void disconnect(int connectionId){
         connectToClient.remove(connectToClient);
@@ -41,8 +56,11 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         //TODO: Add the connectionId to the dictionary and create new Connection handler
        
     }
-    public void subscribe(String channel, int connectionId){
-        //TODO: Add the connectionId to the dictionary and create new Connection handler
+    public boolean subscribeToChanel(String channel, int connectionId){
+        //check if chanel exists
+        //yes-> subscribe
+        //
+        return false;
     }
 }
 //TOPIC = CHANEL
