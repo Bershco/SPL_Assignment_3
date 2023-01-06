@@ -31,7 +31,8 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
         //TODO: understand what I send here for every frame and if others should be implemented in server
         if (errorOrNot.equals("DISCONNECT")){
             shouldTerminate = true;
-            String receipt = "RECEIPT" + "\n"+ "receipt-id:"+"NO IDEA WHERE TO GET IT FROM" +"\n"+ "^@";
+            String rec_id = getReceipt(split_message);
+            String receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
             connections.send(owner, receipt);
             connections.disconnect(owner);
         }
@@ -54,6 +55,17 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
         
     }
         
+    private String getReceipt(String[] message) {
+        for(int i=0; i < message.length;i++){
+            String regex = ":";
+            String[] split = message[i].split(regex);
+            if(split[0].equals("id")){
+                return split[1];
+            }
+        }
+        return "";
+    }
+
     @Override
     public boolean shouldTerminate() {
         return shouldTerminate;
