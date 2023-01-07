@@ -7,9 +7,7 @@ import bgu.spl.net.srv.Connections;
 
 public class StompMassageProtocol implements StompMessagingProtocol<String>{
 
-    //TODO : understand where do I get the receipt id
-    //TODO : when subscribe and unsubscribe we have a subscription id - where the fuch do I save it and what doest it representes
-    // second to do - probably in connectionImpl
+  
  
     private String[] headers = {"CONNECT","SEND","UNSUBSCRIBE","SUBSCRIBE", "DISCONNECT"};
     private boolean shouldTerminate = false;
@@ -28,7 +26,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
         String[] split_message = splitFrame(message);
         String errorOrNot = isError(split_message);
         String frame;
-        //TODO: understand what I send here for every frame and if others should be implemented in server
+        //TODO: understand what I send here for every frame and ihow its connected to the server
         if (errorOrNot.equals("DISCONNECT")){
             shouldTerminate = true;
             String rec_id = getReceipt(split_message);
@@ -41,13 +39,13 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
            connections.send(owner, frame);
         }
         else if(errorOrNot.equals("SUBSCRIBE")){
-         
+         //TODO : implement
         }
         else if(errorOrNot.equals("UNSUBSCRIBE")){
-
+            //TODO : implement
         }
         else if(errorOrNot.equals("SEND")){
-
+            //TODO : implement
         }
         else{
             connections.send(owner, errorOrNot);
@@ -80,7 +78,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
 
     //checks the correctness if the FRAME(headers and such)
     private String isError(String[] message){
-        //todo: add if additional information to error - receipt number
+        //todo: add if additional information to error - receipt number(if needed)
         String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----";
         boolean is_header =false;
         for(int i=0; i <headers.length & !is_header;i++){
@@ -97,7 +95,8 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
             boolean hasId = hasId(message);
             if(message[0].equals("CONNECT")){
                 //TODO: check user and pasword and somehow connect the user and create a connection handler for him --> 
-                //some people say it should be implemented in server
+                //some people say it should be implemented in server, they are probably right
+                //TODO: check if user not logged in already 
             }
             else if(message[0].equals("SEND")){ 
                 if(!hasDest){ //has destination
@@ -109,6 +108,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
                 if(message.length<=3){ //has all fields needed- such as body
                     return ans + "\n" + message.toString() +"\n" +"----"+"\n" + "frame has no body" + "^@";
                 }
+                //check if logged in ->if not error
                 
             }
             else if(message[0].equals("SUBSCRIBE")){
@@ -124,7 +124,20 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
                     ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "frame body" + "^@";
                     return ans;
                 }
+                
             }
+            else if(message[0].equals("UNSUBSCRIBE")){
+        
+                if(!hasId){
+                    ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain id" + "^@";
+                    return ans;
+                }
+                if(message.length>4){
+                    ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "frame body" + "^@";
+                    return ans;
+                }
+                //TODO: check if subscribed - if not error
+            } 
             else if(!hasEnd){
                 ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
                 return ans;

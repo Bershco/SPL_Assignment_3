@@ -47,7 +47,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         }
         return false;
     }
-    //TODO: functions I think we might need: checkIfConnected,check if exists
+    //TODO: functions I think we might need: checkIfConnected,check if user exists
 
     public void disconnect(int connectionId){
         connectToClient.remove(connectToClient);
