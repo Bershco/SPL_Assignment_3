@@ -12,5 +12,11 @@ public interface Connections<T> {
     
 
     //added:
-    boolean checkIfSubscribed(String channel,int connectionId);
+    
+    void addConnectionHandler(ConnectionHandler<T> handler);
+    void connect(int connectionId);
+   
+    boolean checkIfConnected(int owner);
+
+    boolean checkPassword(String user, String pass);
 }
