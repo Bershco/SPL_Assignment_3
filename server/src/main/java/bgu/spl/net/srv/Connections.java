@@ -15,7 +15,7 @@ public interface Connections<T> {
     
     void addConnectionHandler(ConnectionHandler<T> handler);
     void connect(int connectionId);
-   
+    void subscribeToChanel(String channel, int connectionId,int subscription);
     boolean checkIfConnected(int owner);
 
     boolean checkPassword(String user, String pass);

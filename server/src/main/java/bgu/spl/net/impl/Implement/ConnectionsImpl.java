@@ -14,7 +14,8 @@ import bgu.spl.net.srv.Connections;
 public class ConnectionsImpl<T> implements Connections<T>  {
     private List<ConnectionHandler<T>> connection_handlers= new LinkedList<>();
     private Map<Integer,List<String>> topics = new HashMap<>(); //example : <id:1, [book,bloop]>
-    private Map<String,Integer[]> subscriptions = new HashMap<>();// example: <book, [id:1,subscriptionId:78]
+    private Map<Integer,List<Integer>> subId = new HashMap<>(); //example : <id:1, [78,80]>
+    private Map<String,List<Integer>> subscriptions = new HashMap<>();// example: <book, [id:1,id:2]
     private Map<String,String> user_password = new HashMap<>(); //example: <meni,123>
     private Map<Integer,ConnectionHandler<T>> connectToClient = new HashMap<>();
     int counter_handler = 0;
@@ -59,7 +60,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         return false;
     }
 
-    public void subscribeToChanel(String channel, int connectionId,int subId){
+    public void subscribeToChanel(String channel, int connectionId,int subscription){
         
         if(topics.containsKey(connectionId)){
             List<String> topics_per_client = topics.get(connectionId);
@@ -69,10 +70,25 @@ public class ConnectionsImpl<T> implements Connections<T>  {
                 }
             }
             topics.get(connectionId).add(channel);
+            subId.get(connectionId).add(subscription);
             
         }
         else{ //subscribe
-
+            List<String> list1 = new LinkedList<>();
+            list1.add(channel);
+            List<Integer> list2 = new LinkedList<>();
+            list2.add(subscription);
+            topics.put(connectionId,list1);
+            subId.put(connectionId,list2);
+        
+        }
+        if(!subscriptions.containsKey(channel)){
+            List<Integer> list = new LinkedList<>();
+            list.add(connectionId);
+            subscriptions.put(channel,list);
+        }
+        else{
+            subscriptions.get(channel).add(connectionId);
         }
      
     }

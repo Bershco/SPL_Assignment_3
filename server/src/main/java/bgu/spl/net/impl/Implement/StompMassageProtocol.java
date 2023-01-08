@@ -179,15 +179,52 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
             connections.send(owner, ans);
         }
         else{
-            //TODO:
-            //subscribe with chanel ans subId
+            connections.subscribeToChanel(getChannel(message), owner, getID(message));
         }
 
+    }
+
+    private int getID(String[] message) {
+        for(int i=0; i < message.length;i++){
+            if(message[i].contains("id:")){
+                int ind = message[i].indexOf("id:");
+                return Integer.parseInt(message[i].substring(ind));
+            }
+        }
+        return 0;
+    }
+    private String getChannel(String[] message) {
+        for(int i=0; i < message.length;i++){
+            if(message[i].contains("destination:")){
+                int ind = message[i].indexOf("destination:");
+                return message[i].substring(ind);
+            }
+        }
+        return "";
     }
     private String getReceipt(String[] message) {
         for(int i=0; i < message.length;i++){
             if(message[i].contains("receipt")){
                 int ind = message[i].indexOf("receipt");
+                return message[i].substring(ind);
+            }
+        }
+        return "";
+    }
+    private String getPassword(String[] message) {
+        for(int i=0; i < message.length;i++){
+            if(message[i].contains("passcode:")){
+                int ind = message[i].indexOf("passcode:");
+                return message[i].substring(ind);
+            }
+        }
+        return "";
+    }
+
+    private String getUser(String[] message) {
+        for(int i=0; i < message.length;i++){
+            if(message[i].contains("login:")){
+                int ind = message[i].indexOf("login:");
                 return message[i].substring(ind);
             }
         }
@@ -254,24 +291,6 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
         return false;
     }
 
-    private String getPassword(String[] message) {
-        for(int i=0; i < message.length;i++){
-            if(message[i].contains("passcode:")){
-                int ind = message[i].indexOf("passcode:");
-                return message[i].substring(ind);
-            }
-        }
-        return "";
-    }
-
-    private String getUser(String[] message) {
-        for(int i=0; i < message.length;i++){
-            if(message[i].contains("login:")){
-                int ind = message[i].indexOf("login:");
-                return message[i].substring(ind);
-            }
-        }
-        return "";
-    }
+    
 
 }
