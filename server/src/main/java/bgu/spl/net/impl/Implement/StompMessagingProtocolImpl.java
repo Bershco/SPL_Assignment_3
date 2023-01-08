@@ -6,13 +6,14 @@ import javax.swing.plaf.basic.BasicInternalFrameTitlePane.IconifyAction;
 import bgu.spl.net.api.StompMessagingProtocol;
 import bgu.spl.net.srv.Connections;
 
-public class StompMassageProtocol implements StompMessagingProtocol<String>{
+public class StompMessagingProtocolImpl implements StompMessagingProtocol<String>{
 
  
     private String[] headers = {"CONNECT","SEND","UNSUBSCRIBE","SUBSCRIBE", "DISCONNECT"};
     private boolean shouldTerminate = false;
     private Connections<String> connections;
     int owner;
+    private int message_id = 0;
 
     @Override
     public void start(int connectionId, Connections<String> connections) {
@@ -54,7 +55,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
             connect(message);
         }
         else if(message[0].equals("DISCONNECT")){
-            disconnect(message);(message);
+            disconnect(message);
         }
         else if(message[0].equals("SEND")){
             //TODO : implement
@@ -66,6 +67,55 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
             unsubscribe(message);
         }
 
+    }
+
+    public void send(String[] message){
+        
+        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+        boolean hasEnd = message[message.length-1] == "^@";
+        boolean hasError = false;
+        if(!hasEnd){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
+            hasError = true;
+            shouldTerminate = true;
+        }
+        if(!hasError & !hasDest(message)){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No destination header" + "^@";
+            hasError = true;
+            shouldTerminate = true;
+        }
+        if(!hasError){
+            int counter = 0;
+            for(int i =0; i<message.length; i++){
+                if(!message[i].equals("\n")){
+                    counter ++;
+                }
+            }
+            if(counter<4){
+                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No body in the message" + "^@";
+                hasError = true;
+                shouldTerminate = true;
+            }
+        }
+        if(hasError){
+            connections.send(owner, ans);
+        }
+        else{
+            message_id ++;
+            String msg = "MESSAGE" + "\n" + getChannel(message) + "\n" + message_id + "\n" + getBody(message) +"\n"+ connections.getSub(owner,getChannel(message))+"^@" ;
+            connections.send(getChannel(message),msg);
+        }
+        
+    }
+    
+
+    private String getBody(String[] message) {
+        for(int i =0; i<message.length; i++){
+            if(!message[i].equals("\n") && !message[i].equals("destination")&& !message[i].equals("SEND")){
+                return message[i];
+            }
+        }
+        return "";
     }
 
     public void disconnect(String[] message){
@@ -105,11 +155,16 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
             hasError = true;
         }
         if(hasError){
+            shouldTerminate = true;
             connections.send(owner, ans);
         }
         else{
-            //TODO:
-            //check if was subscribed to topic - if wasnt then error i was then unsubscribe
+            
+            if(!connections.unsubscribe(owner,getID(message))){
+                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are not subscribed to topic" + "^@";
+                connections.send(owner, ans);
+            }
+           
         }
     }
 
@@ -137,8 +192,8 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
             ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No passcode" + "^@";
             hasError = true;
         }
+        String user = getUser(message);
         if(!hasError){
-            String user = getUser(message);
             String pass = getPassword(message);
             if(connections.checkIfConnected(owner)){
                 ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are already logged in" + "^@";
@@ -150,11 +205,12 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
             }
         }
         if(hasError){
+            shouldTerminate = true;
             connections.send(owner, ans);
         }
         else{
             String frame = "CONNECTED" +"\n" + "version:1.2"+ "\n" + "^@";
-            connections.connect(owner);
+            connections.connect(owner,user);
             connections.send(owner, frame);
         }
     }
@@ -176,6 +232,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
             hasError = true;
         }
         if(hasError){
+            shouldTerminate = true;
             connections.send(owner, ans);
         }
         else{
@@ -183,7 +240,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
         }
 
     }
-
+    
     private int getID(String[] message) {
         for(int i=0; i < message.length;i++){
             if(message[i].contains("id:")){
@@ -241,7 +298,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
 
     private boolean hasId(String[] message){
         for(int i=0; i < message.length;i++){
-            if(message[i].contains("id")){
+            if(message[i].contains("id:")){
                 return true;
             }
         }
@@ -249,7 +306,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
     }
     private boolean hasDest(String[] message){
         for(int i=0; i < message.length;i++){
-            if(message[i].contains("destination")){
+            if(message[i].contains("destination:")){
                 return true;
             }
         }
@@ -259,7 +316,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
 
     private boolean hasPasscode(String[] message) {
         for(int i=0; i < message.length ; i++){
-            if(message[i].contains("passcode")){
+            if(message[i].contains("passcode:")){
                 return true;
             }
         }
@@ -268,7 +325,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
 
     private boolean hasVersion(String[] message) {
         for(int i=0; i < message.length ; i++){
-            if(message[i].contains("accept-version") & message[i].contains("1.2")){
+            if(message[i].contains("accept-version:") & message[i].contains("1.2")){
                 return true;
             }
         }
@@ -276,7 +333,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
     }
     private boolean hasHost(String[] message) {
         for(int i=0; i < message.length ; i++){
-            if(message[i].contains("host") & message[i].contains("stomp.cs.bgu.ac.il")){
+            if(message[i].contains("host:") & message[i].contains("stomp.cs.bgu.ac.il")){
                 return true;
             }
         }
@@ -284,7 +341,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
     }
     private boolean hasLogin(String[] message) {
         for(int i=0; i < message.length ; i++){
-            if(message[i].contains("login")){
+            if(message[i].contains("login:")){
                 return true;
             }
         }
