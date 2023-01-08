@@ -119,5 +119,13 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
     @Override
     public void send(T msg) {
         //IMPLEMENT IF NEEDED
+        if (chan.isConnected()) {
+            try{
+                chan.write(ByteBuffer.wrap(encdec.encode(msg)));
+            }
+            catch(IOException e){
+                //TODO: ??????????????????????
+            }
+        }
     }
 }

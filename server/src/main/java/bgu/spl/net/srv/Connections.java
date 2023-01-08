@@ -4,6 +4,8 @@ import java.io.IOException;
 
 public interface Connections<T> {
 
+    
+
     boolean send(int connectionId, T msg);
 
     void send(String channel, T msg);
@@ -14,9 +16,15 @@ public interface Connections<T> {
     //added:
     
     void addConnectionHandler(ConnectionHandler<T> handler);
-    void connect(int connectionId);
+    void connect(int connectionId,String user);
     void subscribeToChanel(String channel, int connectionId,int subscription);
     boolean checkIfConnected(int owner);
 
     boolean checkPassword(String user, String pass);
+
+    boolean unsubscribe(int owner, int id);
+
+    String getSub(int owner);
+
+    String getSub(int owner, String channel);
 }

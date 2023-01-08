@@ -17,9 +17,35 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     private Map<Integer,List<Integer>> subId = new HashMap<>(); //example : <id:1, [78,80]>
     private Map<String,List<Integer>> subscriptions = new HashMap<>();// example: <book, [id:1,id:2]
     private Map<String,String> user_password = new HashMap<>(); //example: <meni,123>
+    private Map<Integer,String> user_Id = new HashMap<>(); 
     private Map<Integer,ConnectionHandler<T>> connectToClient = new HashMap<>();
     int counter_handler = 0;
     
+
+    public boolean unsubscribe(int connectionId, int sub_Id){
+        if(!topics.containsKey(connectionId)){
+            return false;
+        }
+        if(!subId.containsKey(sub_Id)){
+            return false;
+        } 
+        
+        else{
+            String topic = "";
+            for(String str : subscriptions.keySet()){
+                List<Integer> lst = subscriptions.get(str);
+                for(Integer i : lst) {
+                    if(connectionId == i){
+                        topic = str;
+                    }
+                }
+            }
+            subscriptions.remove(topic);
+            subId.get(connectionId).remove(sub_Id);
+            topics.get(connectionId).remove(topic);
+        }
+        return true;
+    }
     public boolean send(int connectionId, T msg){  //send messages to client
         try{
             connectToClient.get(connectionId).send(msg);
@@ -41,20 +67,18 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         }  
     }
     public void disconnect(int connectionId){
+        user_Id.remove(connectionId);
         connectToClient.remove(connectionId);
-      /*   topics.remove(connectionId);
-        subscriptions.remove(connectionId); */
+    
     }
 
-
-    
-
-    public void connect(int connectionId){
+    public void connect(int connectionId , String user){
         connectToClient.put(connectionId, connection_handlers.get(counter_handler-1));
+        user_Id.put(connectionId,user);
     }
 
     public boolean checkIfConnected(int connectionId){ 
-        if(connectToClient.containsKey(connectionId)){
+        if(user_Id.containsKey(connectionId)){
             return true;
         }
         return false;
@@ -111,5 +135,15 @@ public class ConnectionsImpl<T> implements Connections<T>  {
             user_password.put(user,pass);
         }
         return true;
+    }
+ 
+    @Override
+    public String getSub(int owner, String channel) {
+       return "";
+    }
+    @Override
+    public String getSub(int owner) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
