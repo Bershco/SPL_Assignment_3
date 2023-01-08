@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.Implement;
 
+import javax.imageio.spi.ImageWriterSpi;
 import javax.swing.plaf.basic.BasicInternalFrameTitlePane.IconifyAction;
 
 import bgu.spl.net.api.StompMessagingProtocol;
@@ -7,7 +8,6 @@ import bgu.spl.net.srv.Connections;
 
 public class StompMassageProtocol implements StompMessagingProtocol<String>{
 
-  
  
     private String[] headers = {"CONNECT","SEND","UNSUBSCRIBE","SUBSCRIBE", "DISCONNECT"};
     private boolean shouldTerminate = false;
@@ -17,53 +17,15 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
     @Override
     public void start(int connectionId, Connections<String> connections) {
         this.connections = connections;
-        owner = connectionId;
-        
+        owner = connectionId;  
     }
 
     @Override
     public void process(String message) {
         String[] split_message = splitFrame(message);
-        String errorOrNot = isError(split_message);
-        String frame;
-        //TODO: understand what I send here for every frame and ihow its connected to the server
-        if (errorOrNot.equals("DISCONNECT")){
-            shouldTerminate = true;
-            String rec_id = getReceipt(split_message);
-            String receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
-            connections.send(owner, receipt);
-            connections.disconnect(owner);
-        }
-        else if(errorOrNot.equals("CONNECT")){
-           frame = "CONNECTED" +"\n" + "version:1.2"+ "\n" + "^@";
-           connections.send(owner, frame);
-        }
-        else if(errorOrNot.equals("SUBSCRIBE")){
-         //TODO : implement
-        }
-        else if(errorOrNot.equals("UNSUBSCRIBE")){
-            //TODO : implement
-        }
-        else if(errorOrNot.equals("SEND")){
-            //TODO : implement
-        }
-        else{
-            connections.send(owner, errorOrNot);
-        }
-        
+        isError(split_message);
     }
-        
-    private String getReceipt(String[] message) {
-        for(int i=0; i < message.length;i++){
-            String regex = ":";
-            String[] split = message[i].split(regex);
-            if(split[0].equals("id")){
-                return split[1];
-            }
-        }
-        return "";
-    }
-
+    
     @Override
     public boolean shouldTerminate() {
         return shouldTerminate;
@@ -77,8 +39,7 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
 
 
     //checks the correctness if the FRAME(headers and such)
-    private String isError(String[] message){
-        //todo: add if additional information to error - receipt number(if needed)
+    private void isError(String[] message){
         String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----";
         boolean is_header =false;
         for(int i=0; i <headers.length & !is_header;i++){
@@ -89,80 +50,247 @@ public class StompMassageProtocol implements StompMessagingProtocol<String>{
         if(!is_header){
             ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain header" + "^@";
         }
+        else if(message[0].equals("CONNECTED")){
+            connect(message);
+        }
+        else if(message[0].equals("DISCONNECT")){
+            disconnect(message);(message);
+        }
+        else if(message[0].equals("SEND")){
+            //TODO : implement
+        }
+        else if(message[0].equals("SUBSCRIBE")){
+            subscribe(message);
+        }
+        else if(message[0].equals("UNSUBSCRIBE")){
+            unsubscribe(message);
+        }
+
+    }
+
+    public void disconnect(String[] message){
+        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+        boolean hasEnd = message[message.length-1] == "^@";
+        boolean hasError = false;
+        if(!hasEnd){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
+            hasError = true;
+        }
+        if(!hasError & !hasReceipt(message)){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header" + "^@";
+            hasError = true;
+        }
+        if(hasError){
+            connections.send(owner, ans);
+        }
         else{
-            boolean hasDest = hasDest(message); 
-            boolean hasEnd = message[message.length-1] == "^@";
-            boolean hasId = hasId(message);
-            if(message[0].equals("CONNECT")){
-                //TODO: check user and pasword and somehow connect the user and create a connection handler for him --> 
-                //some people say it should be implemented in server, they are probably right
-                //TODO: check if user not logged in already 
+            shouldTerminate = true;
+            String rec_id = getReceipt(message);
+            String receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
+            connections.send(owner, receipt);
+            connections.disconnect(owner);
+        }
+    }
+
+    public void unsubscribe(String[] message){
+        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+        boolean hasEnd = message[message.length-1] == "^@";
+        boolean hasError = false;
+        if(!hasEnd){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
+            hasError = true;
+        }
+        if(!hasError & !hasId(message)){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header" + "^@";
+            hasError = true;
+        }
+        if(hasError){
+            connections.send(owner, ans);
+        }
+        else{
+            //TODO:
+            //check if was subscribed to topic - if wasnt then error i was then unsubscribe
+        }
+    }
+
+    public void connect(String[] message){
+        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+        boolean hasEnd = message[message.length-1] == "^@";
+        boolean hasError = false;
+        if(!hasEnd){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
+            hasError = true;
+        }
+        if(!hasError & !hasVersion(message)){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No accept-version ot incorrect version" + "^@";
+            hasError = true;
+        }
+        if(!hasError & !hasHost(message)){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No host or incorrect host" + "^@";
+            hasError = true;
+        }
+        if(!hasError & !hasLogin(message)){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "no login info" + "^@";
+            hasError = true;
+        }
+        if(!hasError & !hasPasscode(message)){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No passcode" + "^@";
+            hasError = true;
+        }
+        if(!hasError){
+            String user = getUser(message);
+            String pass = getPassword(message);
+            if(connections.checkIfConnected(owner)){
+                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are already logged in" + "^@";
+                hasError = true;
             }
-            else if(message[0].equals("SEND")){ 
-                if(!hasDest){ //has destination
-                    return ans + "\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain destination" + "^@";
-                }
-                if(!hasEnd){ 
-                    return ans + "\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain destination" + "^@";   
-                }
-                if(message.length<=3){ //has all fields needed- such as body
-                    return ans + "\n" + message.toString() +"\n" +"----"+"\n" + "frame has no body" + "^@";
-                }
-                //check if logged in ->if not error
-                
-            }
-            else if(message[0].equals("SUBSCRIBE")){
-                if(!hasDest){
-                    ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain destination" + "^@";
-                    return ans;
-                }
-                if(!hasId){
-                    ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain id" + "^@";
-                    return ans;
-                }
-                if(message.length>4){
-                    ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "frame body" + "^@";
-                    return ans;
-                }
-                
-            }
-            else if(message[0].equals("UNSUBSCRIBE")){
-        
-                if(!hasId){
-                    ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain id" + "^@";
-                    return ans;
-                }
-                if(message.length>4){
-                    ans = ans + "\n" + message.toString() +"\n" +"----"+"\n" + "frame body" + "^@";
-                    return ans;
-                }
-                //TODO: check if subscribed - if not error
-            } 
-            else if(!hasEnd){
-                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
-                return ans;
+            if(!hasError & connections.checkPassword(user,pass)){
+                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "password or user is incorrect" + "^@";
+                hasError = true;
             }
         }
-        return message[0]; //return header
+        if(hasError){
+            connections.send(owner, ans);
+        }
+        else{
+            String frame = "CONNECTED" +"\n" + "version:1.2"+ "\n" + "^@";
+            connections.connect(owner);
+            connections.send(owner, frame);
+        }
+    }
+   
+    private void subscribe(String[] message){
+        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+        boolean hasEnd = message[message.length-1] == "^@";
+        boolean hasError = false;
+        if(!hasEnd){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
+            hasError = true;
+        }
+        if(!hasError & !hasDest(message)){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No destination header" + "^@";
+            hasError = true;
+        }
+        if(!hasError & !hasId(message)){
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header" + "^@";
+            hasError = true;
+        }
+        if(hasError){
+            connections.send(owner, ans);
+        }
+        else{
+            connections.subscribeToChanel(getChannel(message), owner, getID(message));
+        }
+
+    }
+
+    private int getID(String[] message) {
+        for(int i=0; i < message.length;i++){
+            if(message[i].contains("id:")){
+                int ind = message[i].indexOf("id:");
+                return Integer.parseInt(message[i].substring(ind));
+            }
+        }
+        return 0;
+    }
+    private String getChannel(String[] message) {
+        for(int i=0; i < message.length;i++){
+            if(message[i].contains("destination:")){
+                int ind = message[i].indexOf("destination:");
+                return message[i].substring(ind);
+            }
+        }
+        return "";
+    }
+    private String getReceipt(String[] message) {
+        for(int i=0; i < message.length;i++){
+            if(message[i].contains("receipt")){
+                int ind = message[i].indexOf("receipt");
+                return message[i].substring(ind);
+            }
+        }
+        return "";
+    }
+    private String getPassword(String[] message) {
+        for(int i=0; i < message.length;i++){
+            if(message[i].contains("passcode:")){
+                int ind = message[i].indexOf("passcode:");
+                return message[i].substring(ind);
+            }
+        }
+        return "";
+    }
+
+    private String getUser(String[] message) {
+        for(int i=0; i < message.length;i++){
+            if(message[i].contains("login:")){
+                int ind = message[i].indexOf("login:");
+                return message[i].substring(ind);
+            }
+        }
+        return "";
+    }
+    private boolean hasReceipt(String[] message) {
+       for(int i=0; i < message.length;i++){
+            if(message[i].contains("receipt")){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasId(String[] message){
+        for(int i=0; i < message.length;i++){
+            if(message[i].contains("id")){
+                return true;
+            }
+        }
+        return false;
     }
     private boolean hasDest(String[] message){
         for(int i=0; i < message.length;i++){
-            String regex = ":";
-            String[] split = message[i].split(regex);
-            if(split[0].equals("destination")){
+            if(message[i].contains("destination")){
                 return true;
             }
         }
         return false;
     }
-    private boolean hasId(String[] message){
-        for(int i=0; i < message.length;i++){
-            String regex = ":";
-            String[] split = message[i].split(regex);
-            if(split[0].equals("id")){
+    
+
+    private boolean hasPasscode(String[] message) {
+        for(int i=0; i < message.length ; i++){
+            if(message[i].contains("passcode")){
                 return true;
             }
         }
         return false;
     }
+
+    private boolean hasVersion(String[] message) {
+        for(int i=0; i < message.length ; i++){
+            if(message[i].contains("accept-version") & message[i].contains("1.2")){
+                return true;
+            }
+        }
+        return false;
+    }
+    private boolean hasHost(String[] message) {
+        for(int i=0; i < message.length ; i++){
+            if(message[i].contains("host") & message[i].contains("stomp.cs.bgu.ac.il")){
+                return true;
+            }
+        }
+        return false;
+    }
+    private boolean hasLogin(String[] message) {
+        for(int i=0; i < message.length ; i++){
+            if(message[i].contains("login")){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+
 }
