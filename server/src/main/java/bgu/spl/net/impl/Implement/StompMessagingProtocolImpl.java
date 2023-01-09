@@ -1,14 +1,13 @@
 package bgu.spl.net.impl.Implement;
 
-import javax.imageio.spi.ImageWriterSpi;
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.IconifyAction;
+
 
 import bgu.spl.net.api.StompMessagingProtocol;
 import bgu.spl.net.srv.Connections;
 
 public class StompMessagingProtocolImpl implements StompMessagingProtocol<String>{
 
-    //TODO : check if connected
+  
  
     private String[] headers = {"CONNECT","SEND","UNSUBSCRIBE","SUBSCRIBE", "DISCONNECT"};
     private boolean shouldTerminate = false;
@@ -253,7 +252,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 }
                 connections.send(owner,receipt);
             }
-        }
+        
     }
    
     private void subscribe(String[] message){

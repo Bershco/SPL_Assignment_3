@@ -1,13 +1,13 @@
 package bgu.spl.net.impl.newsfeed;
 
-import bgu.spl.net.impl.rci.ObjectEncoderDecoder;
+/* import bgu.spl.net.impl.rci.ObjectEncoderDecoder;
 import bgu.spl.net.impl.rci.RemoteCommandInvocationProtocol;
-import bgu.spl.net.srv.Server;
+import bgu.spl.net.srv.Server; */
 
 public class NewsFeedServerMain {
 
     public static void main(String[] args) {
-        NewsFeed feed = new NewsFeed(); //one shared object
+       //NewsFeed feed = new NewsFeed(); //one shared object
 
         // you can use any server... 
       /*   Server.threadPerClient(

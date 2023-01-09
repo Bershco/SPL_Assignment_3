@@ -17,7 +17,6 @@ public class StompMessageEncoderDecoder implements MessageEncoderDecoder<String>
      * @return a message if this byte completes one or null if it doesn't.
      */
     public String decodeNextByte(byte nextByte){
-        //TODO :  check if implemented correctly
         if(nextByte =='\u0000'){
             return popString();
         }
@@ -34,7 +33,6 @@ public class StompMessageEncoderDecoder implements MessageEncoderDecoder<String>
      */
     @Override
     public byte[] encode(String message){
-        //TODO : check if implemented correctly
         return (message + '\u0000').getBytes();
        
     }

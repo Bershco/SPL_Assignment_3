@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.lang.model.util.SimpleAnnotationValueVisitor9;
+
 
 import bgu.spl.net.srv.ConnectionHandler;
 import bgu.spl.net.srv.Connections;
@@ -78,7 +78,22 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     public void disconnect(int connectionId){
         user_Id.remove(connectionId);
         connectToClient.remove(connectionId);
-    
+        subId.remove(connectionId);
+        topics.remove(connectionId);
+        for(String top : subscriptions.keySet()){
+            subscriptions.get(top).remove(connectionId);
+        }
+        for(String top : topicToSub.keySet()){
+            List<Pair> pair = topicToSub.get(top);
+            int ind = 0;
+            for(Pair p : pair){
+                if(p.connection_id == connectionId){
+                    break;
+                }
+                else{ind++;}
+            }
+            topicToSub.get(top).remove(ind);
+        }
     }
 
     public void connect(int connectionId , String user){
