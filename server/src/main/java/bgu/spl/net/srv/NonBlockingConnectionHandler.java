@@ -123,8 +123,8 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
             try{
                 chan.write(ByteBuffer.wrap(encdec.encode(msg)));
             }
-            catch(IOException e){
-                //TODO: ??????????????????????
+            catch(IOException exception){
+                exception.printStackTrace();
             }
         }
     }

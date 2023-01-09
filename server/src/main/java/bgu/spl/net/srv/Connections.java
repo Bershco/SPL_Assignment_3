@@ -15,7 +15,7 @@ public interface Connections<T> {
 
     //added:
     
-    void addConnectionHandler(ConnectionHandler<T> handler);
+    void addConnectionHandler(int id, ConnectionHandler<T> handler);
     void connect(int connectionId,String user);
     void subscribeToChanel(String channel, int connectionId,int subscription);
     boolean checkIfConnected(int owner);
@@ -24,7 +24,7 @@ public interface Connections<T> {
 
     boolean unsubscribe(int owner, int id);
 
-    String getSub(int owner);
+    
 
     String getSub(int owner, String channel);
 }

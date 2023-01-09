@@ -41,7 +41,12 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
     //checks the correctness if the FRAME(headers and such)
     private void isError(String[] message){
-        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----";
+        String error = "ERROR";
+        String rec_id ="";
+        if(hasReceipt(message)){
+            rec_id = "\n" +getReceipt(message);
+        }
+        String ans =error + rec_id +"\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----";
         boolean is_header =false;
         for(int i=0; i <headers.length & !is_header;i++){
             if(headers[i].equals(message[0])){
@@ -49,7 +54,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             }
         }
         if(!is_header){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain header" + "^@";
+            ans = error+ ans +"\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain header" + "^@";
         }
         else if(message[0].equals("CONNECTED")){
             connect(message);
@@ -58,7 +63,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             disconnect(message);
         }
         else if(message[0].equals("SEND")){
-            //TODO : implement
+            send(message);
         }
         else if(message[0].equals("SUBSCRIBE")){
             subscribe(message);
@@ -70,8 +75,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     }
 
     public void send(String[] message){
-        
-        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+        String rec_id ="";
+        if(hasReceipt(message)){
+            rec_id = "\n" +getReceipt(message);
+        }
+        String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
         boolean hasEnd = message[message.length-1] == "^@";
         boolean hasError = false;
         if(!hasEnd){
@@ -103,7 +111,13 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         else{
             message_id ++;
             String msg = "MESSAGE" + "\n" + getChannel(message) + "\n" + message_id + "\n" + getBody(message) +"\n"+ connections.getSub(owner,getChannel(message))+"^@" ;
+            String receipt = "";
+            if(hasReceipt(message)){
+                String rec = getReceipt(message);
+                receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec +"\n"+ "^@";
+            }
             connections.send(getChannel(message),msg);
+            connections.send(owner,receipt);
         }
         
     }
@@ -119,7 +133,13 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     }
 
     public void disconnect(String[] message){
-        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+        
+        String rec_id ="";
+        if(hasReceipt(message)){
+            rec_id = "\n" +getReceipt(message);
+        }
+        String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+
         boolean hasEnd = message[message.length-1] == "^@";
         boolean hasError = false;
         if(!hasEnd){
@@ -135,7 +155,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
         else{
             shouldTerminate = true;
-            String rec_id = getReceipt(message);
             String receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
             connections.send(owner, receipt);
             connections.disconnect(owner);
@@ -143,7 +162,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     }
 
     public void unsubscribe(String[] message){
-        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+        String rec_id ="";
+        if(hasReceipt(message)){
+            rec_id = "\n" +getReceipt(message);
+        }
+        String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
         boolean hasEnd = message[message.length-1] == "^@";
         boolean hasError = false;
         if(!hasEnd){
@@ -164,12 +187,23 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are not subscribed to topic" + "^@";
                 connections.send(owner, ans);
             }
+            else{
+                String receipt = "";
+                if(hasReceipt(message)){
+                    receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
+                }
+                connections.send(owner,receipt);
+            }
            
         }
     }
 
     public void connect(String[] message){
-        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+        String rec_id ="";
+        if(hasReceipt(message)){
+            rec_id = "\n" +getReceipt(message);
+        }
+        String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
         boolean hasEnd = message[message.length-1] == "^@";
         boolean hasError = false;
         if(!hasEnd){
@@ -212,11 +246,22 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             String frame = "CONNECTED" +"\n" + "version:1.2"+ "\n" + "^@";
             connections.connect(owner,user);
             connections.send(owner, frame);
+            String receipt = "";
+                if(hasReceipt(message)){
+                    receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
+                }
+                connections.send(owner,receipt);
+            }
         }
     }
    
     private void subscribe(String[] message){
-        String ans = "ERROR" + "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+        String rec_id ="";
+        if(hasReceipt(message)){
+            rec_id = "\n" +getReceipt(message);
+        }
+        String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
+
         boolean hasEnd = message[message.length-1] == "^@";
         boolean hasError = false;
         if(!hasEnd){
@@ -237,41 +282,51 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
         else{
             connections.subscribeToChanel(getChannel(message), owner, getID(message));
+            String receipt = "";
+                if(hasReceipt(message)){
+                    rec_id = getReceipt(message);
+                    receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
+                }
+                connections.send(owner,receipt);
         }
 
     }
     
     private int getID(String[] message) {
+        String id = "id:";
         for(int i=0; i < message.length;i++){
             if(message[i].contains("id:")){
-                int ind = message[i].indexOf("id:");
+                int ind = message[i].indexOf("id:") + id.length();
                 return Integer.parseInt(message[i].substring(ind));
             }
         }
         return 0;
     }
     private String getChannel(String[] message) {
+        String dst = "destination:";
         for(int i=0; i < message.length;i++){
             if(message[i].contains("destination:")){
-                int ind = message[i].indexOf("destination:");
+                int ind = message[i].indexOf("destination:") + dst.length();
                 return message[i].substring(ind);
             }
         }
         return "";
     }
     private String getReceipt(String[] message) {
+        String rec = "receipt:";
         for(int i=0; i < message.length;i++){
-            if(message[i].contains("receipt")){
-                int ind = message[i].indexOf("receipt");
+            if(message[i].contains("receipt:")){
+                int ind = message[i].indexOf("receipt:") + rec.length();
                 return message[i].substring(ind);
             }
         }
         return "";
     }
     private String getPassword(String[] message) {
+        String pass = "passcode:";
         for(int i=0; i < message.length;i++){
             if(message[i].contains("passcode:")){
-                int ind = message[i].indexOf("passcode:");
+                int ind = message[i].indexOf("passcode:") + pass.length();
                 return message[i].substring(ind);
             }
         }
@@ -279,9 +334,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     }
 
     private String getUser(String[] message) {
+        String user = "login:";
         for(int i=0; i < message.length;i++){
             if(message[i].contains("login:")){
-                int ind = message[i].indexOf("login:");
+                int ind = message[i].indexOf("login:") + user.length();
                 return message[i].substring(ind);
             }
         }

@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 
 public class Reactor<T> implements Server<T> {
 
-    private static final String StompMassageProtocol = null;
+    //private static final String StompMassageProtocol = null;
     private final int port;
     private final Supplier<MessagingProtocol<T>> protocolFactory;
     private final Supplier<MessageEncoderDecoder<T>> readerFactory;

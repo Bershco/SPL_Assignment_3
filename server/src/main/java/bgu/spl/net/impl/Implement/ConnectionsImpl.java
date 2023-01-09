@@ -12,7 +12,7 @@ import bgu.spl.net.srv.ConnectionHandler;
 import bgu.spl.net.srv.Connections;
 
 public class ConnectionsImpl<T> implements Connections<T>  {
-    private List<ConnectionHandler<T>> connection_handlers= new LinkedList<>();
+    
     private Map<Integer,List<String>> topics = new HashMap<>(); //example : <id:1, [book,bloop]>
     private Map<Integer,List<Integer>> subId = new HashMap<>(); //example : <id:1, [78,80]>
     private Map<String,List<Integer>> subscriptions = new HashMap<>();// example: <book, [id:1,id:2]
@@ -40,7 +40,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
                     }
                 }
             }
-            subscriptions.remove(topic);
+            subscriptions.get(topic).remove(connectionId);
             subId.get(connectionId).remove(sub_Id);
             topics.get(connectionId).remove(topic);
         }
@@ -73,7 +73,6 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     }
 
     public void connect(int connectionId , String user){
-        connectToClient.put(connectionId, connection_handlers.get(counter_handler-1));
         user_Id.put(connectionId,user);
     }
 
@@ -119,9 +118,8 @@ public class ConnectionsImpl<T> implements Connections<T>  {
 
 
 
-    public void addConnectionHandler(ConnectionHandler<T> handler){
-        connection_handlers.add(counter_handler,handler);
-        counter_handler++;
+    public void addConnectionHandler(int id ,ConnectionHandler<T> handler){
+        connectToClient.put(id,handler);
     }
 
     @Override
@@ -140,10 +138,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     @Override
     public String getSub(int owner, String channel) {
        return "";
+       //TODO: Implement this method
     }
-    @Override
-    public String getSub(int owner) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+  
 }
