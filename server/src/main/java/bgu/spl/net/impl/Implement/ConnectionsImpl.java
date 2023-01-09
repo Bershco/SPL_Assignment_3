@@ -18,11 +18,11 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     private Map<String,List<Integer>> subscriptions = new HashMap<>();// example: <book, [id:1,id:2]
     private Map<String,String> user_password = new HashMap<>(); //example: <meni,123>
     private Map<Integer,String> user_Id = new HashMap<>();
-    private Map<String,List<Point>> topicToSub = new HashMap<>();  
+    private Map<String,List<Pair>> topicToSub = new HashMap<>();  
     private Map<Integer,ConnectionHandler<T>> connectToClient = new HashMap<>();
 
     
-    //funcions to change : subscribe, unsubscribe, disconnect
+    //TODO: disconnect
 
     public boolean unsubscribe(int connectionId, int sub_Id){
         if(!topics.containsKey(connectionId)){
@@ -45,8 +45,8 @@ public class ConnectionsImpl<T> implements Connections<T>  {
             subscriptions.get(topic).remove(connectionId);
             subId.get(connectionId).remove(sub_Id);
             topics.get(connectionId).remove(topic);
-            List<Point> pointer =  topicToSub.get(topic);
-            for(Point p : pointer){
+            List<Pair> pointer =  topicToSub.get(topic);
+            for(Pair p : pointer){
                 if(p.connection_id == connectionId && p.subscription_id == sub_Id){
                     topicToSub.get(topic).remove(p);
                     break;
@@ -127,11 +127,11 @@ public class ConnectionsImpl<T> implements Connections<T>  {
             
         }
         if(topicToSub.containsKey(channel)){
-            topicToSub.get(channel).add(new Point(connectionId,subscription));
+            topicToSub.get(channel).add(new Pair(connectionId,subscription));
         }
         else{
-            List<Point> list = new LinkedList<>();
-            list.add(new Point(connectionId,subscription));
+            List<Pair> list = new LinkedList<>();
+            list.add(new Pair(connectionId,subscription));
             topicToSub.put(channel,list);
         }
      
@@ -158,8 +158,8 @@ public class ConnectionsImpl<T> implements Connections<T>  {
  
     @Override
     public int getSub(int owner, String channel) {
-        List<Point> point = topicToSub.get(channel);
-        for(Point search : point){
+        List<Pair> point = topicToSub.get(channel);
+        for(Pair search : point){
             if(search.connection_id==owner){
                 return search.subscription_id;
             }
