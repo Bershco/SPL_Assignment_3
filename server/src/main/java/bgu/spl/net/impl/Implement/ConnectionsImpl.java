@@ -1,26 +1,28 @@
 package bgu.spl.net.impl.Implement;
 
-import java.util.Dictionary;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.lang.model.util.SimpleAnnotationValueVisitor9;
+
 
 import bgu.spl.net.srv.ConnectionHandler;
 import bgu.spl.net.srv.Connections;
 
 public class ConnectionsImpl<T> implements Connections<T>  {
-    private List<ConnectionHandler<T>> connection_handlers= new LinkedList<>();
+    
     private Map<Integer,List<String>> topics = new HashMap<>(); //example : <id:1, [book,bloop]>
     private Map<Integer,List<Integer>> subId = new HashMap<>(); //example : <id:1, [78,80]>
     private Map<String,List<Integer>> subscriptions = new HashMap<>();// example: <book, [id:1,id:2]
     private Map<String,String> user_password = new HashMap<>(); //example: <meni,123>
-    private Map<Integer,String> user_Id = new HashMap<>(); 
+    private Map<Integer,String> user_Id = new HashMap<>();
+    private Map<String,List<Pair>> topicToSub = new HashMap<>();  
     private Map<Integer,ConnectionHandler<T>> connectToClient = new HashMap<>();
-    int counter_handler = 0;
+
     
+    //TODO: disconnect
 
     public boolean unsubscribe(int connectionId, int sub_Id){
         if(!topics.containsKey(connectionId)){
@@ -29,7 +31,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         if(!subId.containsKey(sub_Id)){
             return false;
         } 
-        
+        //check id I have such topic - delete from every where if possible
         else{
             String topic = "";
             for(String str : subscriptions.keySet()){
@@ -40,9 +42,16 @@ public class ConnectionsImpl<T> implements Connections<T>  {
                     }
                 }
             }
-            subscriptions.remove(topic);
+            subscriptions.get(topic).remove(connectionId);
             subId.get(connectionId).remove(sub_Id);
             topics.get(connectionId).remove(topic);
+            List<Pair> pointer =  topicToSub.get(topic);
+            for(Pair p : pointer){
+                if(p.connection_id == connectionId && p.subscription_id == sub_Id){
+                    topicToSub.get(topic).remove(p);
+                    break;
+                }
+            }
         }
         return true;
     }
@@ -69,11 +78,25 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     public void disconnect(int connectionId){
         user_Id.remove(connectionId);
         connectToClient.remove(connectionId);
-    
+        subId.remove(connectionId);
+        topics.remove(connectionId);
+        for(String top : subscriptions.keySet()){
+            subscriptions.get(top).remove(connectionId);
+        }
+        for(String top : topicToSub.keySet()){
+            List<Pair> pair = topicToSub.get(top);
+            int ind = 0;
+            for(Pair p : pair){
+                if(p.connection_id == connectionId){
+                    break;
+                }
+                else{ind++;}
+            }
+            topicToSub.get(top).remove(ind);
+        }
     }
 
     public void connect(int connectionId , String user){
-        connectToClient.put(connectionId, connection_handlers.get(counter_handler-1));
         user_Id.put(connectionId,user);
     }
 
@@ -85,7 +108,10 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     }
 
     public void subscribeToChanel(String channel, int connectionId,int subscription){
-        
+        //if I have such topic - nothing
+        //else is there such topic ? 
+        //yes - add to list, no - create new onw
+
         if(topics.containsKey(connectionId)){
             List<String> topics_per_client = topics.get(connectionId);
             for(int i=0; i< topics_per_client.size();i++){
@@ -113,15 +139,23 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         }
         else{
             subscriptions.get(channel).add(connectionId);
+            
+        }
+        if(topicToSub.containsKey(channel)){
+            topicToSub.get(channel).add(new Pair(connectionId,subscription));
+        }
+        else{
+            List<Pair> list = new LinkedList<>();
+            list.add(new Pair(connectionId,subscription));
+            topicToSub.put(channel,list);
         }
      
     }
 
 
 
-    public void addConnectionHandler(ConnectionHandler<T> handler){
-        connection_handlers.add(counter_handler,handler);
-        counter_handler++;
+    public void addConnectionHandler(int id ,ConnectionHandler<T> handler){
+        connectToClient.put(id,handler);
     }
 
     @Override
@@ -138,12 +172,14 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     }
  
     @Override
-    public String getSub(int owner, String channel) {
-       return "";
+    public int getSub(int owner, String channel) {
+        List<Pair> point = topicToSub.get(channel);
+        for(Pair search : point){
+            if(search.connection_id==owner){
+                return search.subscription_id;
+            }
+        }
+        return 0;
     }
-    @Override
-    public String getSub(int owner) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+  
 }

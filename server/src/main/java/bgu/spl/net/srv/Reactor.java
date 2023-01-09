@@ -1,7 +1,7 @@
 package bgu.spl.net.srv;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
-import bgu.spl.net.api.MessagingProtocol;
+import bgu.spl.net.api.StompMessagingProtocol;
 import bgu.spl.net.impl.Implement.ConnectionsImpl;
 import bgu.spl.net.impl.Implement.StompMessagingProtocolImpl;
 
@@ -17,10 +17,10 @@ import java.util.function.Supplier;
 
 public class Reactor<T> implements Server<T> {
 
-    private static final String StompMassageProtocol = null;
+    //private static final String StompMassageProtocol = null;
     private final int port;
-    private final Supplier<MessagingProtocol<T>> protocolFactory;
-    private final Supplier<MessageEncoderDecoder<T>> readerFactory;
+    private final Supplier<StompMessagingProtocol<T>> protocolFactory;
+    private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
     private final ActorThreadPool pool;
     private Selector selector;
 
@@ -31,13 +31,14 @@ public class Reactor<T> implements Server<T> {
     public Reactor(
             int numThreads,
             int port,
-            Supplier<MessagingProtocol<T>> protocolFactory,
-            Supplier<MessageEncoderDecoder<T>> readerFactory) {
+            Supplier<StompMessagingProtocol<T> > protocolFactory,
+            Supplier<MessageEncoderDecoder<T> > readerFactory
+           ) {
 
         this.pool = new ActorThreadPool(numThreads);
         this.port = port;
         this.protocolFactory = protocolFactory;
-        this.readerFactory = readerFactory;
+        this.encdecFactory = readerFactory;
         counter = 0;
     }
 
@@ -102,13 +103,13 @@ public class Reactor<T> implements Server<T> {
         SocketChannel clientChan = serverChan.accept();
         clientChan.configureBlocking(false);
         final NonBlockingConnectionHandler<T> handler = new NonBlockingConnectionHandler<>(
-                readerFactory.get(),
+                encdecFactory.get(),
                 protocolFactory.get(),
                 clientChan,
                 this);
         ((StompMessagingProtocolImpl)handler.protocol).start(counter,(Connections<String>)connections);
         counter++;
-        connections.addConnectionHandler(handler);
+        connections.addConnectionHandler(counter, handler);
         clientChan.register(selector, SelectionKey.OP_READ, handler);
     }
 
