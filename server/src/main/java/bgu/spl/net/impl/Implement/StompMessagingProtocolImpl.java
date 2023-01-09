@@ -8,6 +8,7 @@ import bgu.spl.net.srv.Connections;
 
 public class StompMessagingProtocolImpl implements StompMessagingProtocol<String>{
 
+    //TODO : check if connected
  
     private String[] headers = {"CONNECT","SEND","UNSUBSCRIBE","SUBSCRIBE", "DISCONNECT"};
     private boolean shouldTerminate = false;
@@ -110,7 +111,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
         else{
             message_id ++;
-            String msg = "MESSAGE" + "\n" + getChannel(message) + "\n" + message_id + "\n" + getBody(message) +"\n"+ connections.getSub(owner,getChannel(message))+"^@" ;
+            String msg = "MESSAGE" + "\n" + getChannel(message) + "\n" + message_id +"\n"+ connections.getSub(owner,getChannel(message))+ "\n" + getBody(message)+ "\n" +"^@" ;
             String receipt = "";
             if(hasReceipt(message)){
                 String rec = getReceipt(message);

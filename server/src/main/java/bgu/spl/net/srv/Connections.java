@@ -26,5 +26,5 @@ public interface Connections<T> {
 
     
 
-    String getSub(int owner, String channel);
+    int getSub(int owner, String channel);
 }
