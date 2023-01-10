@@ -8,13 +8,16 @@ using boost::asio::ip::tcp;
 
 class ConnectionHandler {
 private:
-	const std::string host_;
-	const short port_;
+	std::string host_;
+	short port_;
 	boost::asio::io_service io_service_;   // Provides core I/O functionality
 	tcp::socket socket_;
+	std::string username;
 
 public:
 	ConnectionHandler(std::string host, short port);
+
+	ConnectionHandler();
 
 	virtual ~ConnectionHandler();
 
@@ -47,5 +50,17 @@ public:
 
 	// Close down the connection properly.
 	void close();
+
+	//Initiate the host and port.
+	void initConnection(std::string,short);
+
+	//Check if ConnectionHandler is default or connected.
+	bool isConnected();
+
+	//Set the current username
+	void setUsername(string);
+
+	//Get the current username
+	string getUserName();
 
 }; //class ConnectionHandler
