@@ -7,7 +7,7 @@ import bgu.spl.net.srv.Server;
 public class StompServer {
 
     public static void main(String[] args) {
-        // TODO: implement this
+        
         if(args[1].equals("tpc")){
             Server.threadPerClient(
                 7777, //port

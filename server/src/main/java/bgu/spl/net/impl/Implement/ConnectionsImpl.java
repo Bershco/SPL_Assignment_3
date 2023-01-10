@@ -21,8 +21,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     private Map<String,List<Pair>> topicToSub = new HashMap<>();  
     private Map<Integer,ConnectionHandler<T>> connectToClient = new HashMap<>();
 
-    
-    //TODO: disconnect
+   
 
     public boolean unsubscribe(int connectionId, int sub_Id){
         if(!topics.containsKey(connectionId)){
