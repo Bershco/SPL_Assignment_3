@@ -83,13 +83,9 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             rec_id = "\n" +getReceipt(message);
         }
         String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
-        boolean hasEnd = message[message.length-1] == "^@";
+       
         boolean hasError = false;
-        if(!hasEnd){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character";
-            hasError = true;
-            shouldTerminate = true;
-        }
+       
         if(!hasError & !hasDest(message)){
             ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No destination header";
             hasError = true;
@@ -134,12 +130,9 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
         String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
 
-        boolean hasEnd = message[message.length-1] == "^@";
+        
         boolean hasError = false;
-        if(!hasEnd){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character";
-            hasError = true;
-        }
+        
         if(!hasError & !hasReceipt(message)){
             ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header";
             hasError = true;
@@ -161,12 +154,9 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             rec_id = "\n" +getReceipt(message);
         }
         String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
-        boolean hasEnd = message[message.length-1] == "^@";
+       
         boolean hasError = false;
-        if(!hasEnd){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character";
-            hasError = true;
-        }
+        
         if(!hasError & !hasId(message)){
             ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header";
             hasError = true;
@@ -198,12 +188,9 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             rec_id = "\n" +getReceipt(message);
         }
         String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
-        boolean hasEnd = message[message.length-1] == "\u0000";
+       
         boolean hasError = false;
-        if(!hasEnd){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character";
-            hasError = true;
-        }
+        
         if(!hasError & !hasVersion(message)){
             ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No accept-version ot incorrect version";
             hasError = true;
@@ -256,12 +243,9 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
         String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
 
-        boolean hasEnd = message[message.length-1] == "^@";
+        
         boolean hasError = false;
-        if(!hasEnd){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character";
-            hasError = true;
-        }
+        
         if(!hasError & !hasDest(message)){
             ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No destination header";
             hasError = true;

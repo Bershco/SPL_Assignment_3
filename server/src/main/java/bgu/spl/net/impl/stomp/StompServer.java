@@ -7,10 +7,10 @@ import bgu.spl.net.srv.Server;
 public class StompServer {
 
     public static void main(String[] args) {
-        
+        int port = Integer.parseInt(args[1]);
         if(args[1].equals("tpc")){
             Server.threadPerClient(
-                7777, //port
+                port, //port
                 () -> new StompMessagingProtocolImpl(), //protocol factory
                 () -> new StompMessageEncoderDecoder() //message encoder decoder factory
         ).serve();
@@ -18,7 +18,7 @@ public class StompServer {
         if(args[1].equals("reactor")){
             Server.reactor(
                 10, 
-                7777, 
+                port, 
                 () -> new StompMessagingProtocolImpl(),
                 () -> new StompMessageEncoderDecoder()).serve();
         }
