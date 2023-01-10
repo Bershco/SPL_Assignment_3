@@ -17,7 +17,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     private Map<Integer,List<Integer>> subId = new HashMap<>(); //example : <id:1, [78,80]>
     private Map<String,List<Integer>> subscriptions = new HashMap<>();// example: <book, [id:1,id:2]
     private Map<String,String> user_password = new HashMap<>(); //example: <meni,123>
-    private Map<Integer,String> user_Id = new HashMap<>();
+    private Map<Integer,String> user_Id = new HashMap<>(); //hash map got log ins
     private Map<String,List<Pair>> topicToSub = new HashMap<>();  
     private Map<Integer,ConnectionHandler<T>> connectToClient = new HashMap<>();
 

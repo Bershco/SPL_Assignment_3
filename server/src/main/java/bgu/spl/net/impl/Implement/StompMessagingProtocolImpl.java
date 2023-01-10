@@ -59,6 +59,9 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         else if(message[0].equals("CONNECTED")){
             connect(message);
         }
+        else if(!connections.checkIfConnected(owner)){
+            ans = ans +"\n" +"----"+"\n" + "can not preform actions if not connected " + "^@";
+        }
         else if(message[0].equals("DISCONNECT")){
             disconnect(message);
         }
@@ -95,7 +98,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         if(!hasError){
             int counter = 0;
             for(int i =0; i<message.length; i++){
-                if(!message[i].equals("\n")){
+                if(!message[i].equals("")){
                     counter ++;
                 }
             }
@@ -122,15 +125,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         
     }
     
-
-    private String getBody(String[] message) {
-        for(int i =0; i<message.length; i++){
-            if(!message[i].equals("\n") && !message[i].equals("destination")&& !message[i].equals("SEND")){
-                return message[i];
-            }
-        }
-        return "";
-    }
 
     public void disconnect(String[] message){
         
@@ -291,6 +285,16 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
 
     }
+
+    private boolean noAdditional(int lines, String[] message){
+        int counter = 0; 
+        for(int i =0; i<message.length; i++){
+            if(!message[i].equals("")){
+                counter ++;
+            }
+        }
+        return (counter == lines);
+    }
     
     private int getID(String[] message) {
         String id = "id:";
@@ -333,6 +337,15 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         return "";
     }
 
+    private String getBody(String[] message) {
+        for(int i =0; i<message.length; i++){
+            if(!message[i].equals("\n") && !message[i].equals("destination")&& !message[i].equals("SEND")){
+                return message[i];
+            }
+        }
+        return "";
+    }
+
     private String getUser(String[] message) {
         String user = "login:";
         for(int i=0; i < message.length;i++){
@@ -345,7 +358,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     }
     private boolean hasReceipt(String[] message) {
        for(int i=0; i < message.length;i++){
-            if(message[i].contains("receipt")){
+            if(message[i].contains("receipt:")){
+                String[] checkEmpty = message[i].split(":");
+                if(checkEmpty.length == 1){
+                    return false;
+                }
                 return true;
             }
         }
@@ -355,6 +372,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private boolean hasId(String[] message){
         for(int i=0; i < message.length;i++){
             if(message[i].contains("id:")){
+                String[] checkEmpty = message[i].split(":");
+                if(checkEmpty.length == 1){
+                    return false;
+                }
                 return true;
             }
         }
@@ -363,6 +384,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private boolean hasDest(String[] message){
         for(int i=0; i < message.length;i++){
             if(message[i].contains("destination:")){
+                String[] checkEmpty = message[i].split(":");
+                if(checkEmpty.length == 1){
+                    return false;
+                }
                 return true;
             }
         }
@@ -373,6 +398,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private boolean hasPasscode(String[] message) {
         for(int i=0; i < message.length ; i++){
             if(message[i].contains("passcode:")){
+                String[] checkEmpty = message[i].split(":");
+                if(checkEmpty.length == 1){
+                    return false;
+                }
                 return true;
             }
         }
@@ -398,6 +427,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private boolean hasLogin(String[] message) {
         for(int i=0; i < message.length ; i++){
             if(message[i].contains("login:")){
+                String[] checkEmpty = message[i].split(":");
+                if(checkEmpty.length == 1){
+                    return false;
+                }
                 return true;
             }
         }
