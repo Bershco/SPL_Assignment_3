@@ -1,4 +1,5 @@
 #include "../include/ConnectionHandler.h"
+#include "ConnectionHandler.h"
 
 using boost::asio::ip::tcp;
 
@@ -10,7 +11,9 @@ using std::string;
 
 ConnectionHandler::ConnectionHandler(string host, short port) : host_(host), port_(port), io_service_(),
                                                                 socket_(io_service_) {}
-
+																
+																
+ConnectionHandler::ConnectionHandler() : host_("Not Connected"), io_service_(), socket_(io_service_) {}
 ConnectionHandler::~ConnectionHandler() {
 	close();
 }
@@ -101,8 +104,30 @@ bool ConnectionHandler::sendFrameAscii(const std::string &frame, char delimiter)
 // Close down the connection properly.
 void ConnectionHandler::close() {
 	try {
+		host_ = "Not Connected";
 		socket_.close();
 	} catch (...) {
 		std::cout << "closing failed: connection already closed" << std::endl;
 	}
+}
+
+void ConnectionHandler::initConnection(std::string host, short port)
+{
+	ConnectionHandler::host_ = host;
+	ConnectionHandler::port_ = port;
+}
+
+bool ConnectionHandler::isConnected()
+{
+    return host_ != "Not Connected";
+}
+
+void ConnectionHandler::setUsername(string user)
+{
+	username = user;
+}
+
+string ConnectionHandler::getUserName()
+{
+	return username;
 }
