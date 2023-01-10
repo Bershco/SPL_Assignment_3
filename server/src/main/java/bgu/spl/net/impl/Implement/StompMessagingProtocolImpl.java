@@ -54,10 +54,13 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             }
         }
         if(!is_header){
-            ans = error+ ans +"\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain header" + "^@";
+            ans = error+ ans +"\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain header";
         }
         else if(message[0].equals("CONNECTED")){
             connect(message);
+        }
+        else if(!connections.checkIfConnected(owner)){
+            ans = ans +"\n" +"----"+"\n" + "can not preform actions if not connected ";
         }
         else if(message[0].equals("DISCONNECT")){
             disconnect(message);
@@ -83,24 +86,24 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         boolean hasEnd = message[message.length-1] == "^@";
         boolean hasError = false;
         if(!hasEnd){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character";
             hasError = true;
             shouldTerminate = true;
         }
         if(!hasError & !hasDest(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No destination header" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No destination header";
             hasError = true;
             shouldTerminate = true;
         }
         if(!hasError){
             int counter = 0;
             for(int i =0; i<message.length; i++){
-                if(!message[i].equals("\n")){
+                if(!message[i].equals("")){
                     counter ++;
                 }
             }
             if(counter<4){
-                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No body in the message" + "^@";
+                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No body in the message";
                 hasError = true;
                 shouldTerminate = true;
             }
@@ -110,11 +113,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
         else{
             message_id ++;
-            String msg = "MESSAGE" + "\n" + getChannel(message) + "\n" + message_id +"\n"+ connections.getSub(owner,getChannel(message))+ "\n" + getBody(message)+ "\n" +"^@" ;
+            String msg = "MESSAGE" + "\n" + getChannel(message) + "\n" + message_id +"\n"+ connections.getSub(owner,getChannel(message))+ "\n" + getBody(message)+ "\n";
             String receipt = "";
             if(hasReceipt(message)){
                 String rec = getReceipt(message);
-                receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec +"\n"+ "^@";
+                receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec +"\n";
             }
             connections.send(getChannel(message),msg);
             connections.send(owner,receipt);
@@ -122,15 +125,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         
     }
     
-
-    private String getBody(String[] message) {
-        for(int i =0; i<message.length; i++){
-            if(!message[i].equals("\n") && !message[i].equals("destination")&& !message[i].equals("SEND")){
-                return message[i];
-            }
-        }
-        return "";
-    }
 
     public void disconnect(String[] message){
         
@@ -143,11 +137,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         boolean hasEnd = message[message.length-1] == "^@";
         boolean hasError = false;
         if(!hasEnd){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character";
             hasError = true;
         }
         if(!hasError & !hasReceipt(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header";
             hasError = true;
         }
         if(hasError){
@@ -155,7 +149,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
         else{
             shouldTerminate = true;
-            String receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
+            String receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n";
             connections.send(owner, receipt);
             connections.disconnect(owner);
         }
@@ -170,11 +164,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         boolean hasEnd = message[message.length-1] == "^@";
         boolean hasError = false;
         if(!hasEnd){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character";
             hasError = true;
         }
         if(!hasError & !hasId(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header";
             hasError = true;
         }
         if(hasError){
@@ -184,13 +178,13 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         else{
             
             if(!connections.unsubscribe(owner,getID(message))){
-                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are not subscribed to topic" + "^@";
+                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are not subscribed to topic";
                 connections.send(owner, ans);
             }
             else{
                 String receipt = "";
                 if(hasReceipt(message)){
-                    receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
+                    receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n";
                 }
                 connections.send(owner,receipt);
             }
@@ -204,37 +198,37 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             rec_id = "\n" +getReceipt(message);
         }
         String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
-        boolean hasEnd = message[message.length-1] == "^@";
+        boolean hasEnd = message[message.length-1] == "\u0000";
         boolean hasError = false;
         if(!hasEnd){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character";
             hasError = true;
         }
         if(!hasError & !hasVersion(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No accept-version ot incorrect version" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No accept-version ot incorrect version";
             hasError = true;
         }
         if(!hasError & !hasHost(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No host or incorrect host" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No host or incorrect host";
             hasError = true;
         }
         if(!hasError & !hasLogin(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "no login info" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "no login info";
             hasError = true;
         }
         if(!hasError & !hasPasscode(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No passcode" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No passcode";
             hasError = true;
         }
         String user = getUser(message);
         if(!hasError){
             String pass = getPassword(message);
             if(connections.checkIfConnected(owner)){
-                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are already logged in" + "^@";
+                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are already logged in";
                 hasError = true;
             }
             if(!hasError & connections.checkPassword(user,pass)){
-                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "password or user is incorrect" + "^@";
+                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "password or user is incorrect";
                 hasError = true;
             }
         }
@@ -243,12 +237,12 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             connections.send(owner, ans);
         }
         else{
-            String frame = "CONNECTED" +"\n" + "version:1.2"+ "\n" + "^@";
+            String frame = "CONNECTED" +"\n" + "version:1.2"+ "\n";
             connections.connect(owner,user);
             connections.send(owner, frame);
             String receipt = "";
                 if(hasReceipt(message)){
-                    receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
+                    receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n";
                 }
                 connections.send(owner,receipt);
             }
@@ -265,15 +259,15 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         boolean hasEnd = message[message.length-1] == "^@";
         boolean hasError = false;
         if(!hasEnd){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No null character";
             hasError = true;
         }
         if(!hasError & !hasDest(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No destination header" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No destination header";
             hasError = true;
         }
         if(!hasError & !hasId(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header" + "^@";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header";
             hasError = true;
         }
         if(hasError){
@@ -285,11 +279,21 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             String receipt = "";
                 if(hasReceipt(message)){
                     rec_id = getReceipt(message);
-                    receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n"+ "^@";
+                    receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n";
                 }
                 connections.send(owner,receipt);
         }
 
+    }
+
+    private boolean noAdditional(int lines, String[] message){
+        int counter = 0; 
+        for(int i =0; i<message.length; i++){
+            if(!message[i].equals("")){
+                counter ++;
+            }
+        }
+        return (counter == lines);
     }
     
     private int getID(String[] message) {
@@ -333,6 +337,15 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         return "";
     }
 
+    private String getBody(String[] message) {
+        for(int i =0; i<message.length; i++){
+            if(!message[i].equals("\n") && !message[i].equals("destination")&& !message[i].equals("SEND")){
+                return message[i];
+            }
+        }
+        return "";
+    }
+
     private String getUser(String[] message) {
         String user = "login:";
         for(int i=0; i < message.length;i++){
@@ -345,7 +358,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     }
     private boolean hasReceipt(String[] message) {
        for(int i=0; i < message.length;i++){
-            if(message[i].contains("receipt")){
+            if(message[i].contains("receipt:")){
+                String[] checkEmpty = message[i].trim().split(":");
+                if(checkEmpty.length == 1){
+                    return false;
+                }
                 return true;
             }
         }
@@ -355,6 +372,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private boolean hasId(String[] message){
         for(int i=0; i < message.length;i++){
             if(message[i].contains("id:")){
+                String[] checkEmpty = message[i].trim().split(":");
+                if(checkEmpty.length == 1){
+                    return false;
+                }
                 return true;
             }
         }
@@ -363,6 +384,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private boolean hasDest(String[] message){
         for(int i=0; i < message.length;i++){
             if(message[i].contains("destination:")){
+                String[] checkEmpty = message[i].trim().split(":");
+                if(checkEmpty.length == 1){
+                    return false;
+                }
                 return true;
             }
         }
@@ -373,6 +398,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private boolean hasPasscode(String[] message) {
         for(int i=0; i < message.length ; i++){
             if(message[i].contains("passcode:")){
+                String[] checkEmpty = message[i].trim().split(":");
+                if(checkEmpty.length == 1){
+                    return false;
+                }
                 return true;
             }
         }
@@ -398,6 +427,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private boolean hasLogin(String[] message) {
         for(int i=0; i < message.length ; i++){
             if(message[i].contains("login:")){
+                String[] checkEmpty = message[i].trim().split(":");
+                if(checkEmpty.length == 1){
+                    return false;
+                }
                 return true;
             }
         }
