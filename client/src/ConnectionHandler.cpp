@@ -14,6 +14,7 @@ ConnectionHandler::ConnectionHandler(string host, short port) : host_(host), por
 																
 																
 ConnectionHandler::ConnectionHandler() : host_("Not Connected"), io_service_(), socket_(io_service_) {}
+
 ConnectionHandler::~ConnectionHandler() {
 	close();
 }
@@ -122,7 +123,7 @@ bool ConnectionHandler::isConnected()
     return host_ != "Not Connected";
 }
 
-void ConnectionHandler::setUsername(string user)
+void ConnectionHandler::setUsername(string& user)
 {
 	username = user;
 }

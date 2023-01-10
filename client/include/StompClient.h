@@ -17,6 +17,7 @@ class StompClient {
     static int idOf(string);
     static string nameOf(int);
     static int addToList(string);
+
     static ConnectionHandler ch;
     static bool connectedProperly;
 

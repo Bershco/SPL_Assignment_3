@@ -57,10 +57,10 @@ public:
 	//Check if ConnectionHandler is default or connected.
 	bool isConnected();
 
-	//Set the current username
-	void setUsername(string);
+	//Set the cur`rent username
+	void setUsername(std::string& user);
 
 	//Get the current username
-	string getUserName();
+	std::string getUserName();
 
 }; //class ConnectionHandler

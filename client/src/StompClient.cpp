@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 					host = words[1].substr(0,delimeter);
 					words[1].erase(0, delimeter + 1);
 					port = stoi(words[1]);
-				}
+				} //TODO add else statement when there's no ':' in the host:port
 				std::cout << "Attempting log in sequence." << std::endl;
 				StompClient::ch.initConnection(host,port);
 				StompClient::ch.connect();
