@@ -1,5 +1,5 @@
-#pragma once
-
+#ifndef CH
+#define CH
 #include <string>
 #include <iostream>
 #include <boost/asio.hpp>
@@ -64,3 +64,4 @@ public:
 	std::string getUserName();
 
 }; //class ConnectionHandler
+#endif

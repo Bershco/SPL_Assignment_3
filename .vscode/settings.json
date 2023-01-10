@@ -61,7 +61,8 @@
         "utility": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "*.ipp": "cpp"
     },
     "makefile.makefilePath": "client/",
     "C_Cpp.errorSquiggles": "enabled"
