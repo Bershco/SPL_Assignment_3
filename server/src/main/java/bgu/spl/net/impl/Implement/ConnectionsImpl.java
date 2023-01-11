@@ -23,37 +23,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
 
    
 
-    public boolean unsubscribe(int connectionId, int sub_Id){
-        if(!topics.containsKey(connectionId)){
-            return false;
-        }
-        if(!subId.containsKey(sub_Id)){
-            return false;
-        } 
-        //check id I have such topic - delete from every where if possible
-        else{
-            String topic = "";
-            for(String str : subscriptions.keySet()){
-                List<Integer> lst = subscriptions.get(str);
-                for(Integer i : lst) {
-                    if(connectionId == i){
-                        topic = str;
-                    }
-                }
-            }
-            subscriptions.get(topic).remove(connectionId);
-            subId.get(connectionId).remove(sub_Id);
-            topics.get(connectionId).remove(topic);
-            List<Pair> pointer =  topicToSub.get(topic);
-            for(Pair p : pointer){
-                if(p.connection_id == connectionId && p.subscription_id == sub_Id){
-                    topicToSub.get(topic).remove(p);
-                    break;
-                }
-            }
-        }
-        return true;
-    }
+   
     public boolean send(int connectionId, T msg){  //send messages to client
         try{
             connectToClient.get(connectionId).send(msg);
@@ -106,18 +76,43 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         return false;
     }
 
+    public boolean unsubscribe(int connectionId, int sub_Id){
+        if(!topics.containsKey(connectionId)){
+            return false;
+        }
+        if(!subId.get(connectionId).contains(sub_Id)){
+            return false;
+        } 
+        else{
+            String topic = "";
+            for(String str : subscriptions.keySet()){
+                List<Integer> lst = subscriptions.get(str);
+                for(Integer i : lst) {
+                    if(connectionId == i){
+                        topic = str;
+                    }
+                }
+            }
+            subscriptions.get(topic).remove(connectionId);
+            subId.get(connectionId).remove(sub_Id);
+            topics.get(connectionId).remove(topic);
+            List<Pair> pointer =  topicToSub.get(topic);
+            for(Pair p : pointer){
+                if(p.connection_id == connectionId && p.subscription_id == sub_Id){
+                    topicToSub.get(topic).remove(p);
+                    break;
+                }
+            }
+        }
+        return true;
+    }
+    
     public void subscribeToChanel(String channel, int connectionId,int subscription){
         //if I have such topic - nothing
         //else is there such topic ? 
         //yes - add to list, no - create new onw
 
         if(topics.containsKey(connectionId)){
-            List<String> topics_per_client = topics.get(connectionId);
-            for(int i=0; i< topics_per_client.size();i++){
-                if(topics_per_client.get(i).equals(channel)){
-                    return;
-                }
-            }
             topics.get(connectionId).add(channel);
             subId.get(connectionId).add(subscription);
             

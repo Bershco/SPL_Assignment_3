@@ -53,8 +53,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 is_header = true;
             }
         }
-        if(!is_header){
+        if(!is_header){  
             ans = error+ ans +"\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain header";
+            shouldTerminate = true;
+            connections.disconnect(owner);
+            connections.send(owner,ans);
         }
         else if(message[0].equals("CONNECTED")){
             connect(message);
@@ -106,6 +109,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
         if(hasError){
             connections.send(owner, ans);
+            connections.disconnect(owner);
         }
         else{
             message_id ++;
@@ -134,11 +138,13 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         boolean hasError = false;
         
         if(!hasError & !hasReceipt(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header";
+            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No reciept header";
             hasError = true;
         }
         if(hasError){
             connections.send(owner, ans);
+            shouldTerminate = true;
+            connections.disconnect(owner);
         }
         else{
             shouldTerminate = true;
@@ -164,6 +170,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         if(hasError){
             shouldTerminate = true;
             connections.send(owner, ans);
+            connections.disconnect(owner);
         }
         else{
             
@@ -222,6 +229,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         if(hasError){
             shouldTerminate = true;
             connections.send(owner, ans);
+            connections.disconnect(owner);
         }
         else{
             String frame = "CONNECTED" +"\n" + "version:1.2"+ "\n";
@@ -257,6 +265,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         if(hasError){
             shouldTerminate = true;
             connections.send(owner, ans);
+            connections.disconnect(owner);
         }
         else{
             connections.subscribeToChanel(getChannel(message), owner, getID(message));
@@ -322,12 +331,13 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     }
 
     private String getBody(String[] message) {
-        for(int i =0; i<message.length; i++){
-            if(!message[i].equals("\n") && !message[i].equals("destination")&& !message[i].equals("SEND")){
-                return message[i];
+        String msg = "";
+        for(int i =2; i<message.length; i++){
+            if(!message[i].equals("")){
+                msg = msg + message[i];
             }
         }
-        return "";
+        return msg;
     }
 
     private String getUser(String[] message) {
