@@ -3,8 +3,11 @@
 #include "ConnectionHandler.h"
 #include "StompClient.h"
 #include <vector>
+#include <unordered_map>
+#include <queue>
 
 using string = std::string;
+class Event;
 
 
 class AverageKeyboardEnjoyer {
@@ -17,18 +20,24 @@ class AverageKeyboardEnjoyer {
     string buildFrameSubscribe(string);
     string buildFrameUnsubscribe(string);
     std::vector<string> buildFramesSend(string);
-    void generateSummary();
+    void generateSummary(string,string,string);
     int idOf(string);
     string nameOf(int);
     int addToList(string);
 
 
-
+    std::unordered_map<string,std::queue<Event>> eventByUser;
     ConnectionHandler ch;
     bool connectedProperly;
     std::vector<std::pair<string,int>> gameName_to_Id;
     int sub_id_counter;
 
 
+};
+
+struct compareLexicographically {
+    bool operator()(const std::pair<string,string>& a, const std::pair<string,string>& b) const {
+        return a.first < b.first;
+    }
 };
 #endif
