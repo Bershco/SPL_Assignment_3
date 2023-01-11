@@ -26,7 +26,7 @@ class AverageKeyboardEnjoyer {
     int addToList(string);
 
 
-    std::unordered_map<string,std::queue<Event>> eventByUser;
+    std::unordered_map<string,std::queue<Event>> eventByUser; //TODO implement the insertion of the maps to this queue
     ConnectionHandler ch;
     bool connectedProperly;
     std::vector<std::pair<string,int>> gameName_to_Id;

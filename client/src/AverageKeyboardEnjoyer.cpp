@@ -207,6 +207,7 @@ void AverageKeyboardEnjoyer::generateSummary(string game_name, string user, stri
 			tbs.insert(pair);
 		}
 		//CHECK UP UNTIL HERE, all else is different things than the one mentioned above
+		//From here on out, gs, tas, and tbs should be lexicographically ordered.
 
 		for (auto& update : gs) {
 			auto it = general_stats.find(update.first);
@@ -230,7 +231,6 @@ void AverageKeyboardEnjoyer::generateSummary(string game_name, string user, stri
 				team_b_stats.insert(update);
 		}
 	}
-	//TODO insert a lexicographical sort to each map above, here
 
 
 	std::vector<string> split;
@@ -261,7 +261,6 @@ void AverageKeyboardEnjoyer::generateSummary(string game_name, string user, stri
 	//TODO make sure this file_path is an actual file path and that the ofstream::open method does what it's supposed to do
 	outputFile << output << std::endl;
 	outputFile.close();
-
 }
 
 int AverageKeyboardEnjoyer::idOf(string game_name)
