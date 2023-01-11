@@ -1,4 +1,9 @@
 #include "../include/AverageKeyboardEnjoyer.h"
+#include "../include/event.h"
+#include <fstream>
+#include <boost/algorithm/string.hpp>
+#include <utility>
+using namespace std;
 
 AverageKeyboardEnjoyer::AverageKeyboardEnjoyer() : ch(), connectedProperly(), gameName_to_Id(), sub_id_counter()
 {
@@ -11,54 +16,47 @@ void AverageKeyboardEnjoyer::Run()
 			char buffer[bufferSize];
 			std::cin.getline(buffer,bufferSize);
 			string line(buffer);
-			//int commandLen = line.length() + 1;
 
 			//string splitting starts here
-			int numberOfSpaces = 0;
-			for (int i = 0; i < line.length(); i++)
-				if (line.at(i) == ' ')
-					numberOfSpaces++;
-			size_t pos = 0;
-			string words[numberOfSpaces+1];
-			int wordInd = 0;
-			while ((pos = line.find(' ') != string::npos)) {
-				words[wordInd] = line.substr(0,pos);
-				line.erase(0,pos + 1);
-				wordInd++;
-			}
-			words[wordInd] = line;
+			std::vector<string> words;
+			boost::split(words,line,boost::is_any_of(" "));
 			//string splitting ends here
 
 			string frame;
 			std::vector<string> frames;
 
 			bool isConnected = ch.isConnected();
+
 			if (words[0] == "logout" && isConnected) {
 				frame = buildFrameDisconnect();
 				ch.sendLine(frame);
+				//TODO when the proper receipt is received change host to "Not Connected" and close connection handler
 			}
+
 			else if (words[0] == "login" && !isConnected) {
 				frame = buildFrameConnect(words[2],words[3]);
 				string host;
 				short port;
-				if (std::size_t delimeter = words[1].find(':') != string::npos) {
-					host = words[1].substr(0,delimeter);
-					words[1].erase(0, delimeter + 1);
-					port = stoi(words[1]);
-				} //TODO add else statement when there's no ':' in the host:port
+				std::vector<string> split;
+				boost::split(split,words[1],boost::is_any_of(":"));
+				host = split[0];
+				port = stoi(split[1]);
 				std::cout << "Attempting log in sequence." << std::endl;
 				ch.initConnection(host,port);
 				ch.connect();
 				ch.setUsername(words[2]);
 				ch.sendLine(frame);
 			}
+
 			else if (words[0] == "join" && isConnected) {
 				frame = buildFrameSubscribe(words[1]);
 				ch.sendLine(frame);
 			}
+
 			else if (words[0] == "exit" && isConnected) {
 				frame = buildFrameUnsubscribe(words[1]);
 				ch.sendLine(frame);
+
 			}
 			else if (words[0] == "report" && isConnected) {
 				frames = buildFramesSend(words[1]);
@@ -67,17 +65,20 @@ void AverageKeyboardEnjoyer::Run()
 					frames.pop_back();
 					ch.sendLine(frame);
 				}
+			}
 
-			}
 			else if (words[0] == "summary" && isConnected) {
-				generateSummary();
+				generateSummary(words[1],words[2],words[3]);
 			}
+
 			else if (!isConnected && (words[0] == "logout" || words[0] == "join" || words[0] == "exit" || words[0] == "report" || words[0] == "summary")) {
 				std::cout << "You've tried to use the " + words[0] + " command without logging in first.\nPlease log in." << std::endl;
 			}
+
 			else if (isConnected && words[0] == "login") {
 				std::cout << "Only one user can log in at any time.";
 			}
+
 			else if (words[0] == "close_client") {
 				std::cout << "Initiating self-destruction, in" << std::endl << "3" << std::endl;
 				string line("idk how to log out yet");
@@ -90,12 +91,14 @@ void AverageKeyboardEnjoyer::Run()
 				sleep(1);
 				break;
 			}
+
 			else {
 				std::cout << "That's not a proper command" << std::endl;
 				//TODO might need to throw an error or smth but seems unlikely
 			}
-			//TODO add sendLine if needed
+
 		}
+		ch.close();
 		//TODO add finishing code here if needed
 		//TODO add sending the frame to the server
 }
@@ -173,9 +176,92 @@ std::vector<string> AverageKeyboardEnjoyer::buildFramesSend(string file_path)
     return output;
 }
 
-void AverageKeyboardEnjoyer::generateSummary()
+void AverageKeyboardEnjoyer::generateSummary(string game_name, string user, string file_path)
 {
 	//TODO implement summary generation
+	std::queue<Event> events_reported_by_player = eventByUser[game_name];
+	std::queue<Event> neededLater(events_reported_by_player); //Copying the queue for later use in this method
+	std::map<string,string> general_stats;
+	std::map<string,string> team_a_stats;
+	std::map<string,string> team_b_stats;
+
+	//The next lines are to insert all proper elements into all proper maps
+	while (!events_reported_by_player.empty()) {
+		Event e = events_reported_by_player.front(); //TODO might need to be something else
+		events_reported_by_player.pop();
+		std::map<string,string> gs_temp = e.get_game_updates();
+		std::map<string,string> tas_temp = e.get_team_a_updates();
+		std::map<string,string> tbs_temp = e.get_team_b_updates();
+
+		//TODO These next lines are SUPPOSEDLY lexicographically sorting the map as the pairs are getting in it, need to check this is working
+		std::map<string,string,compareLexicographically> gs;
+		std::map<string,string,compareLexicographically> tas;
+		std::map<string,string,compareLexicographically> tbs;
+		for (auto& pair : gs_temp) {
+			gs.insert(pair);
+		}
+		for (auto& pair : tas_temp) {
+			tas.insert(pair);
+		}
+		for (auto& pair : tbs_temp) {
+			tbs.insert(pair);
+		}
+		//CHECK UP UNTIL HERE, all else is different things than the one mentioned above
+
+		for (auto& update : gs) {
+			auto it = general_stats.find(update.first);
+			if (it != general_stats.end())
+				general_stats[update.first] = update.second;
+			else
+				general_stats.insert(update);
+		}
+		for (auto& update : tas) {
+			auto it = team_a_stats.find(update.first);
+			if (it != team_a_stats.end())
+				team_a_stats[update.first] = update.second;
+			else
+				team_a_stats.insert(update);
+		}
+		for (auto& update : tbs) {
+			auto it = team_b_stats.find(update.first);
+			if (it != team_b_stats.end())
+				team_b_stats[update.first] = update.second;
+			else
+				team_b_stats.insert(update);
+		}
+	}
+	//TODO insert a lexicographical sort to each map above, here
+
+
+	std::vector<string> split;
+	boost::split(split,game_name,boost::is_any_of("_"));
+	string output(split[0] + " vs " + split[1] + "\nGame stats:\nGeneral stats:\n");
+	for (auto& stat_pair : general_stats) {
+		output += stat_pair.first + ": " + stat_pair.second + "\n";
+	}
+	output += "\n" + split[0] + " stats:\n";
+	for (auto& stat_pair : team_a_stats) {
+		output += stat_pair.first + ": " + stat_pair.second + "\n";
+	}
+	output += "\n" + split[1] + " stats:\n";
+	for (auto& stat_pair : team_b_stats) {
+		output += stat_pair.first + ": " + stat_pair.second + "\n";
+	}
+	output += "Game event reports:\n";
+	while (!neededLater.empty()) {
+		Event e = neededLater.front(); //TODO might need to be something else
+		neededLater.pop();
+		output += e.get_time() + " - " + e.get_name() + "\n\n";
+		output += e.get_discription() + "\n\n\n";
+	}
+
+	//The next lines are for outputting the string created into the desired file
+	std::ofstream outputFile;
+	outputFile.open(file_path, std::ios::trunc); //This flag is to make sure the file always gets truncated (as in, we 'koti'im' the file, or just simply - overwriting it if it exists)
+	//TODO make sure this file_path is an actual file path and that the ofstream::open method does what it's supposed to do
+	outputFile << output << std::endl;
+	outputFile.close();
+
 }
 
 int AverageKeyboardEnjoyer::idOf(string game_name)

@@ -40,18 +40,18 @@ int Event::get_time() const
 {
     return this->time;
 }
-
-const std::map<std::string, std::string> &Event::get_game_updates() const
+//Changed the 3 following methods to return a non-const map<string,string>
+std::map<std::string, std::string> &Event::get_game_updates()
 {
     return this->game_updates;
 }
 
-const std::map<std::string, std::string> &Event::get_team_a_updates() const
+std::map<std::string, std::string> &Event::get_team_a_updates()
 {
     return this->team_a_updates;
 }
 
-const std::map<std::string, std::string> &Event::get_team_b_updates() const
+std::map<std::string, std::string> &Event::get_team_b_updates()
 {
     return this->team_b_updates;
 }
