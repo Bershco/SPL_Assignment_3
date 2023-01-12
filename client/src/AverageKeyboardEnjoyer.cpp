@@ -80,11 +80,19 @@ void AverageKeyboardEnjoyer::Run()
 			}
 
 			else if (words[0] == "close_client") {
-				std::cout << "Initiating self-destruction, in" << std::endl << "3" << std::endl;
-				string line("idk how to log out yet");
+				std::cout << "Initiating self-destruction, in\n3" << std::endl;
+				string line("idk how to log out yet"); //TODO ceck if logged in, and if so - send a disconnect frame, and wait for 'disconnected'
 				if (ch.sendLine(line))
 					ch.close();
-				sleep(1);
+				if (isConnected) {
+					frame = buildFrameDisconnect();
+					ch.sendLine(frame);
+					sleep(1);
+					ch.close(); //this should be enough, not sure.
+				}
+				else {
+					sleep(1);
+				}
 				std::cout << "2" << std::endl;
 				sleep(1);
 				std::cout << "1" << std::endl;
