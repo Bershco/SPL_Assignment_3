@@ -39,7 +39,7 @@ public class Reactor<T> implements Server<T> {
         this.port = port;
         this.protocolFactory = protocolFactory;
         this.encdecFactory = readerFactory;
-        counter = 0;
+        counter = 1;
     }
 
     @Override
@@ -108,8 +108,8 @@ public class Reactor<T> implements Server<T> {
                 clientChan,
                 this);
         ((StompMessagingProtocolImpl)handler.protocol).start(counter,(Connections<String>)connections);
-        counter++;
         connections.addConnectionHandler(counter, handler);
+        counter++;
         clientChan.register(selector, SelectionKey.OP_READ, handler);
     }
 
