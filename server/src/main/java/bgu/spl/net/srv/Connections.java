@@ -22,4 +22,6 @@ public interface Connections<T> {
     boolean checkPassword(String user, String pass);
     boolean unsubscribe(int owner, int id);
     int getSub(int owner, String channel);
+
+    boolean checkIfHasTopic(int owner, String channel);
 }

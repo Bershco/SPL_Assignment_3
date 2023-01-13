@@ -14,6 +14,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private Connections<String> connections;
     int owner;
     private int message_id = 0;
+    private String mess= "";
 
     @Override
     public void start(int connectionId, Connections<String> connections) {
@@ -23,6 +24,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
     @Override
     public void process(String message) {
+        mess = message;
         String[] split_message = splitFrame(message);
         isError(split_message);
     }
@@ -57,7 +59,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
 
         if(!is_header){  
-            ans = error+ ans +"\n" + message.toString() +"\n" +"----"+"\n" + "Did not contain header";
+            ans = error+ ans +"\n" + mess +"\n" +"----"+"\n" + "Did not contain header";
             shouldTerminate = true;
             connections.disconnect(owner);
             connections.send(owner,ans);
@@ -99,7 +101,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         boolean hasError = false;
        
         if(!hasError & !hasDest(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No destination header";
+            ans = ans +"\n" + mess +"\n" +"----"+"\n" + "No destination header";
             hasError = true;
             shouldTerminate = true;
         }
@@ -111,36 +113,53 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                     counter ++;
                 }
             }
-
-            if(counter<4){
-                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No body in the message";
-                hasError = true;
-                shouldTerminate = true;
+            if(rec_id ==""){
+                if(counter<4){
+                    ans = ans +"\n" + mess +"\n" +"----"+"\n" + "No body in the message";
+                    hasError = true;
+                    shouldTerminate = true;
+                }
             }
+            else{
+                if(counter<5){
+                    ans = ans +"\n" + mess +"\n" +"----"+"\n" + "No body in the message";
+                    hasError = true;
+                    shouldTerminate = true;
+                }
+            }
+           
         }
-
         if(hasError){
             connections.send(owner, ans);
             connections.disconnect(owner);
         }
 
-        else{ //TODO add error handling of when a user reported events on a topic he's not subscribed to
-            message_id ++;
-            String channel = getChannel(message);
-            String msg = "MESSAGE" + 
-            "\nsubscription:" + connections.getSub(owner,channel) +
-            "\nmessage-id:" + message_id +
-            "\ndestination:" + channel +
-            "\n\n" + getBody(message)+ 
-            "\n";
-            String receipt = "";
-            connections.send(channel,msg);
-
-            if(hasReceipt(message)){
-                String rec = getReceipt(message);
-                receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec +"\n";
-                connections.send(owner,receipt);
+        else{ 
+            if(connections.checkIfHasTopic(owner,getChannel(message))){
+                message_id ++;
+                String channel = getChannel(message);
+                String msg = "MESSAGE" + 
+                "\nsubscription:" + connections.getSub(owner,channel) +
+                "\nmessage-id:" + message_id +
+                "\ndestination:" + channel +
+                "\n\n" + getBody(message)+ 
+                "\n";
+                String receipt = "";
+                connections.send(channel,msg);
+    
+                if(hasReceipt(message)){
+                    String rec = getReceipt(message);
+                    receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec +"\n";
+                    connections.send(owner,receipt);
+                }
             }
+            else{
+                ans = ans +"\n" + mess +"\n" +"----"+"\n" + "you are not subscribed";
+                hasError = true;
+                shouldTerminate = true;
+                connections.disconnect(owner);
+            }
+           
         }
     }
     
@@ -157,7 +176,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         boolean hasError = false;
         
         if(!hasError & !hasReceipt(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No reciept header";
+            ans = ans +"\n" + mess +"\n" +"----"+"\n" + "No reciept header";
             hasError = true;
         }
 
@@ -184,7 +203,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         boolean hasError = false;
         
         if(!hasError & !hasId(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header";
+            ans = ans +"\n" + mess +"\n" +"----"+"\n" + "No id header";
             hasError = true;
         }
 
@@ -197,7 +216,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         else{
             
             if(!connections.unsubscribe(owner,getID(message))){
-                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are not subscribed to topic";
+                ans = ans +"\n" + mess +"\n" +"----"+"\n" + "you are not subscribed to topic";
                 connections.send(owner, ans);
                 shouldTerminate = true;
                 connections.disconnect(owner);
@@ -223,22 +242,22 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String ans = "ERROR" +rec_id+ "\n" + "message: malformed frame received" + "\n" + "The massage:" +"\n"+ "----"; 
         boolean hasError = false;
         if(!hasError & !hasVersion(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No accept-version ot incorrect version";
+            ans = ans +"\n" + mess +"\n" +"----"+"\n" + "No accept-version ot incorrect version";
             hasError = true;
         }
 
         if(!hasError & !hasHost(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No host or incorrect host";
+            ans = ans +"\n" + mess +"\n" +"----"+"\n" + "No host or incorrect host";
             hasError = true;
         }
 
         if(!hasError & !hasLogin(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "no login info";
+            ans = ans +"\n" + mess +"\n" +"----"+"\n" + "no login info";
             hasError = true;
         }
 
         if(!hasError & !hasPasscode(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No passcode";
+            ans = ans +"\n" + mess +"\n" +"----"+"\n" + "No passcode";
             hasError = true;
         }
 
@@ -247,11 +266,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         if(!hasError){
             String pass = getPassword(message);
             if(connections.checkIfConnected(owner)){
-                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are already logged in";
+                ans = ans +"\n" + mess +"\n" +"----"+"\n" + "you are already logged in";
                 hasError = true;
             }
             if(!hasError & connections.checkPassword(user,pass)){
-                ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "password or user is incorrect";
+                ans = ans +"\n" + mess+"\n" +"----"+"\n" + "password or user is incorrect";
                 hasError = true;
             }
         }
@@ -283,12 +302,12 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         boolean hasError = false;
 
         if(!hasError & !hasDest(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No destination header";
+            ans = ans +"\n" + mess +"\n" +"----"+"\n" + "No destination header";
             hasError = true;
         }
 
         if(!hasError & !hasId(message)){
-            ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "No id header";
+            ans = ans +"\n" + mess +"\n" +"----"+"\n" + "No id header";
             hasError = true;
         }
         

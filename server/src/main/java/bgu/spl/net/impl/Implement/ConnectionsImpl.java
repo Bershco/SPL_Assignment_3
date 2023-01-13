@@ -77,6 +77,16 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         return false;
     }
 
+    public boolean checkIfHasTopic(int connectionId, String subscription){
+        if(topics.containsKey(connectionId)){
+            List<String> list = topics.get(connectionId);
+            for(String t : list){
+                if(t.equals(subscription)){return true;}
+            }
+        }
+       return false;
+    }
+
     public boolean unsubscribe(int connectionId, int sub_Id){
         if(!topics.containsKey(connectionId)){
             return false;
