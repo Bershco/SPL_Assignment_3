@@ -21,6 +21,9 @@ bin/event.o: src/event.cpp
 bin/StompClient.o: src/StompClient.cpp
 	g++ $(CFLAGS) -o bin/StompClient.o src/StompClient.cpp
 
+bin/AverageMemeEnjoyer.o: src/AverageMemeEnjoyer.cpp
+	g++ $(CFLAGS) -o bin/AverageMemeEnjoyer.o src/AverageMemeEnjoyer.cpp
+
 .PHONY: clean
 clean:
 	rm -f bin/*
