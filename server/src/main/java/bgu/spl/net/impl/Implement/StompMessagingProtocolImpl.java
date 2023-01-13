@@ -279,15 +279,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
     }
 
-    private boolean noAdditional(int lines, String[] message){
-        int counter = 0; 
-        for(int i =0; i<message.length; i++){
-            if(!message[i].equals("")){
-                counter ++;
-            }
-        }
-        return (counter == lines);
-    }
+    
     
     private int getID(String[] message) {
         String id = "id:";

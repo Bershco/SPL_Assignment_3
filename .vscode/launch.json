@@ -24,7 +24,8 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/client/bin/StompWCIClient",
-            "args": [],
+            "args": [
+            ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
