@@ -46,13 +46,13 @@ public abstract class BaseServer<T> implements Server<T> {
                         encdecFactory.get(),
                         protocolFactory.get());
                         ((StompMessagingProtocolImpl)handler.protocol).start(counter,(Connections<String>)connections);
-                        counter++;
-                        connections.addConnectionHandler(counter, handler);        
+                        connections.addConnectionHandler(counter, handler);
+                        counter++;   
                 execute(handler);
             }
         } catch (IOException ex) {
         }
-
+        
         System.out.println("server closed!!!");
     }
 

@@ -5,15 +5,17 @@
 #include <vector>
 #include <unordered_map>
 #include <queue>
+#include <utility>
 
 using string = std::string;
 class Event;
 
 
-class AverageKeyboardEnjoyer {
+class AverageMemeEnjoyer {
     public:
-    AverageKeyboardEnjoyer();
-    void Run();
+    AverageMemeEnjoyer();
+    void RunKeyboard();
+    void RunSocket();
 
     string buildFrameConnect(string , string);
     string buildFrameDisconnect();
@@ -24,20 +26,22 @@ class AverageKeyboardEnjoyer {
     int idOf(string);
     string nameOf(int);
     int addToList(string);
+    void addReceipt(string);
+    string getMsgFromReceipt(int);
+    std::queue<std::pair<string,string>> order_lex(std::map<string,string>&);
+    ConnectionHandler& getCH();
+    void decodeFrameConnected();
+    void decodeFrameReceipt(string);
+    void decodeFrameMessage(string);
+    void decodeFrameError(string);
 
-
+    
     std::unordered_map<string,std::queue<Event>> eventByUser; //TODO implement the insertion of the maps to this queue
     ConnectionHandler ch;
-    bool connectedProperly;
-    std::vector<std::pair<string,int>> gameName_to_Id;
+    std::map<int,string> sub_id_to_game_name;
     int sub_id_counter;
-
-
-};
-
-struct compareLexicographically {
-    bool operator()(const std::pair<string,string>& a, const std::pair<string,string>& b) const {
-        return a.first < b.first;
-    }
+    std::map<int,string> receipt_id_to_msg;
+    
+    bool closeSocketThread;
 };
 #endif

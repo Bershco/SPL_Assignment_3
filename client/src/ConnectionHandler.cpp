@@ -9,11 +9,10 @@ using std::cerr;
 using std::endl;
 using std::string;
 
-ConnectionHandler::ConnectionHandler(string host, short port) : host_(host), port_(port), io_service_(),
-                                                                socket_(io_service_) {}
+ConnectionHandler::ConnectionHandler(string host, short port) : host_(host), port_(port), io_service_(), socket_(io_service_), username() {}
 																
 																
-ConnectionHandler::ConnectionHandler() : host_("Not Connected"), io_service_(), socket_(io_service_) {}
+ConnectionHandler::ConnectionHandler() : host_("Not Connected"), port_(), io_service_(), socket_(io_service_), username() {}
 
 ConnectionHandler::~ConnectionHandler() {
 	close();
@@ -62,7 +61,7 @@ bool ConnectionHandler::sendBytes(const char bytes[], int bytesToWrite) {
 		if (error)
 			throw boost::system::system_error(error);
 	} catch (std::exception &e) {
-		std::cerr << "recv failed (Error: " << e.what() << ')' << std::endl;
+		std::cerr << "recv2 failed (Error: " << e.what() << ')' << std::endl;
 		return false;
 	}
 	return true;

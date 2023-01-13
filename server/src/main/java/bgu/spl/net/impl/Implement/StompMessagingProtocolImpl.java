@@ -18,7 +18,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     @Override
     public void start(int connectionId, Connections<String> connections) {
         this.connections = connections;
-        owner = connectionId;  
+        owner = connectionId;
     }
 
     @Override
@@ -59,7 +59,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             connections.disconnect(owner);
             connections.send(owner,ans);
         }
-        else if(message[0].equals("CONNECTED")){
+        else if(message[0].equals("CONNECT")){
             connect(message);
         }
         else if(!connections.checkIfConnected(owner)){
@@ -238,8 +238,8 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             String receipt = "";
                 if(hasReceipt(message)){
                     receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n";
+                    connections.send(owner,receipt);
                 }
-                connections.send(owner,receipt);
             }
         
     }

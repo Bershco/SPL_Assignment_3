@@ -2,6 +2,7 @@ package bgu.spl.net.impl.Implement;
 
 
 import java.util.HashMap;
+import java.util.WeakHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
     private Map<String,String> user_password = new HashMap<>(); //example: <meni,123>
     private Map<Integer,String> user_Id = new HashMap<>(); //hash map got log ins
     private Map<String,List<Pair>> topicToSub = new HashMap<>();  
-    private Map<Integer,ConnectionHandler<T>> connectToClient = new HashMap<>();
+    private Map<Integer,ConnectionHandler<T>> connectToClient = new WeakHashMap<>();
 
    
 
@@ -161,6 +162,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         }
         else{
             user_password.put(user,pass);
+            return false;
         }
         return true;
     }
