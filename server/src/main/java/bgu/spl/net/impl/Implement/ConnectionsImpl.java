@@ -51,7 +51,7 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         subId.remove(connectionId);
         topics.remove(connectionId);
         for(String top : subscriptions.keySet()){
-            subscriptions.get(top).remove(connectionId);
+            subscriptions.get(top).remove(new Integer(connectionId));
         }
         for(String top : topicToSub.keySet()){
             List<Pair> pair = topicToSub.get(top);
@@ -94,8 +94,11 @@ public class ConnectionsImpl<T> implements Connections<T>  {
                     }
                 }
             }
-            subscriptions.get(topic).remove(connectionId);
-            subId.get(connectionId).remove(sub_Id);
+
+            subscriptions.get(topic).
+            remove(new Integer(connectionId));
+
+            subId.get(connectionId).remove(new Integer(sub_Id));
             topics.get(connectionId).remove(topic);
             List<Pair> pointer =  topicToSub.get(topic);
             for(Pair p : pointer){

@@ -123,17 +123,18 @@ void AverageMemeEnjoyer::RunSocket()
 		if (!ch.getFrameAscii(answer,'\0')) {
 			//std::cout << "Socket not responding, retrying in 30 seconds\n" << std::endl;
 			continue;
-		} else std::cout << "the socket listener is listening" << std::endl;
+		}
 		std::vector<string> split_answer;
 		boost::split(split_answer,answer,boost::is_any_of("\n"));
 		if (split_answer[0] == "CONNECTED")
 			decodeFrameConnected();
 		else if (split_answer[0] == "RECEIPT")
 			decodeFrameReceipt(answer);
-		else if (split_answer[0] == "ERROR") 
+		else if (split_answer[0] == "ERROR")
 			decodeFrameError(answer);
 		else if (split_answer[0] == "MESSAGE")
 			decodeFrameMessage(answer);
+		else std::cout << "HOW" << std::endl;
 	}
 }
 string AverageMemeEnjoyer::buildFrameConnect(string username, string password)
@@ -173,9 +174,10 @@ string AverageMemeEnjoyer::buildFrameSubscribe(string game_name)
 string AverageMemeEnjoyer::buildFrameUnsubscribe(string game_name)
 {
 	int sub_id = idOf(game_name);
-	if (sub_id == -1)
-		return ""; //TODO this needs to be an error or smth
-	string output = "UNSUBSCRIBE\nid:" + std::to_string(sub_id) +"\nreceipt:" + std::to_string(sub_id_counter) + "\n\n\0";
+	string output = "UNSUBSCRIBE\nid:";
+	if (sub_id != -1)
+		output += std::to_string(sub_id);
+	output += "\nreceipt:" + std::to_string(sub_id_counter) + "\n\n\0";
     addReceipt(output);
 	return output;
 }
@@ -201,9 +203,11 @@ std::vector<string> AverageMemeEnjoyer::buildFramesSend(string file_path)
 		for (auto& cggu : genGameUp) {
 			currentFrame += "\t" + cggu.first + ": " + cggu.second + "\n";
 		}
+		currentFrame += "team a updates: \n";
 		for (auto& cggu : teamAUp) {
 			currentFrame += "\t" + cggu.first + ": " + cggu.second + "\n";
 		}
+		currentFrame += "team b updates: \n";
 		for (auto& cggu : teamBUp) {
 			currentFrame += "\t" + cggu.first + ": " + cggu.second + "\n";
 		}
@@ -216,7 +220,7 @@ std::vector<string> AverageMemeEnjoyer::buildFramesSend(string file_path)
 
 void AverageMemeEnjoyer::generateSummary(string game_name, string user, string file_path)
 {
-	std::queue<Event> events_reported_by_player = eventByUser[game_name];
+	std::queue<Event> events_reported_by_player = eventByUser[user];
 	std::queue<Event> neededLater(events_reported_by_player); //Copying the queue for later use in this method
 	std::map<string,string> general_stats;
 	std::map<string,string> team_a_stats;
@@ -253,14 +257,24 @@ void AverageMemeEnjoyer::generateSummary(string game_name, string user, string f
 		}
 	}
 
-	std::queue<pair<string,string>> sorted_general_stats = AverageMemeEnjoyer::order_lex(general_stats);
-	std::queue<pair<string,string>> sorted_team_a_stats = AverageMemeEnjoyer::order_lex(team_a_stats);
-	std::queue<pair<string,string>> sorted_team_b_stats = AverageMemeEnjoyer::order_lex(team_b_stats);
+	//std::queue<pair<string,string>> sorted_general_stats = AverageMemeEnjoyer::order_lex(general_stats);
+	//std::queue<pair<string,string>> sorted_team_a_stats = AverageMemeEnjoyer::order_lex(team_a_stats);
+	//std::queue<pair<string,string>> sorted_team_b_stats = AverageMemeEnjoyer::order_lex(team_b_stats);
 	
 
 	std::vector<string> split;
 	boost::split(split,game_name,boost::is_any_of("_"));
 	string output(split[0] + " vs " + split[1] + "\nGame stats:\nGeneral stats:\n");
+	for (auto& pair : general_stats) {
+		output += pair.first + ": " + pair.second + "\n";
+	}
+	for (auto& pair : team_a_stats) {
+		output += pair.first + ": " + pair.second + "\n";
+	}
+	for (auto& pair : team_b_stats) {
+		output += pair.first + ": " + pair.second + "\n";
+	}
+	/*
 	while (!sorted_general_stats.empty()) {
 		auto pair = sorted_general_stats.front();
 		sorted_general_stats.pop();
@@ -276,6 +290,7 @@ void AverageMemeEnjoyer::generateSummary(string game_name, string user, string f
 		sorted_team_a_stats.pop();
 		output += pair.first + ": " + pair.second + "\n";
 	}
+	*/
 	
 	output += "Game event reports:\n";
 	while (!neededLater.empty()) {
@@ -333,7 +348,7 @@ std::queue<pair<string,string>> AverageMemeEnjoyer::order_lex(std::map<string,st
 	while (!unsorted_map.empty()) {
 		string min = "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"; //to make sure the first one checked is already the minimum
 		for (auto& pair : unsorted_map) {
-			if (std::lexicographical_compare(pair.first.begin(),pair.first.end(),min.begin(),min.end()))
+			if (pair.first < min)
 				min = pair.first;
 		}
 		pair<string,string> addToSorted = make_pair(min,unsorted_map[min]);
@@ -373,7 +388,7 @@ void AverageMemeEnjoyer::decodeFrameReceipt(string receipt_frame)
 		std::vector<string> split_sub_id_header;
 		boost::split(split_sub_id_header,split_msg[1],boost::is_any_of(":"));
 		int unsub_id = stoi(split_sub_id_header[1]);
-		std::cout << "Exited channel " + sub_id_to_game_name[unsub_id];
+		std::cout << "Exited channel " + sub_id_to_game_name[unsub_id] << std::endl;
 	}
 	else if (split_msg[0] == "DISCONNECT") {
 		std::cout << "Disconnection is working" <<std::endl;
@@ -394,7 +409,101 @@ void AverageMemeEnjoyer::decodeFrameError(string error_frame)
 	//TODO this might need to be more than this, right now it just prints the error frame without the null char
 }
 
-void AverageMemeEnjoyer::decodeFrameMessage(string)
+void AverageMemeEnjoyer::decodeFrameMessage(string msg_frame)
 {
+	std::vector<string> split_msg_frame;
+	boost::split(split_msg_frame, msg_frame, boost::is_any_of("\n"));
+	string username, team_a, team_b, event_name, description;
+	int time;
+	std::map<string,string> gameUpdates, teamAUpdates, teamBUpdates;
+	bool foundUserName = false,
+	foundEventName = false,
+	foundTeamAName = false,
+	foundTeamBName = false,
+	foundTime = false,
+	foundGameUpdates = false,
+	foundTeamAUpdates = false,
+	foundTeamBUpdates = false,
+	foundDescription = false,
+	gameLines = false,
+	teamALines = false,
+	teamBLines = false,
+	descriptionLines = false;
+
+	for (auto& str : split_msg_frame) {
+		if (size_t pos = str.find("\t") != std::string::npos) {
+			string withoutTab = str.substr(pos);
+			std::vector<string> split_str;
+			boost::split(split_str,withoutTab,boost::is_any_of(":"));
+			auto pair = make_pair(split_str[0],split_str[1]);
+			if (gameLines) {
+				gameUpdates.insert(pair);
+			}
+			else if (teamALines) {
+				teamAUpdates.insert(pair);
+			}
+			else if (teamBLines) {
+				teamBUpdates.insert(pair);
+			}
+		}
+		else if (descriptionLines) {
+			description += str + "\n";
+		}
+		else if (!foundUserName && str.find("user:") != std::string::npos) {
+			std::vector<string> split_str;
+			boost::split(split_str,str,boost::is_any_of(":"));
+			username = split_str[1].substr(1); //removes the space character at the start of the string
+		}
+		else if (!foundTeamAName && str.find("team a:") != std::string::npos) {
+			std::vector<string> split_str;
+			boost::split(split_str,str,boost::is_any_of(":"));
+			team_a = split_str[1].substr(1); //removes the space character at the start of the string
+		}
+		else if (!foundTeamBName && str.find("team b:") != std::string::npos) {
+			std::vector<string> split_str;
+			boost::split(split_str,str,boost::is_any_of(":"));
+			team_b = split_str[1].substr(1); //removes the space character at the start of the string
+		}
+		else if (!foundEventName && str.find("event name:") != std::string::npos) {
+			std::vector<string> split_str;
+			boost::split(split_str,str,boost::is_any_of(":"));
+			event_name = split_str[1].substr(1); //removes the space character at the start of the string
+		}
+		else if (!foundTime && str.find("time:") != std::string::npos) {
+			std::vector<string> split_str;
+			boost::split(split_str,str,boost::is_any_of(":"));
+			time = stoi(split_str[1].substr(1)); //removes the space character at the start of the string and then turns it into int using stoi
+		}
+		else if (!foundGameUpdates && str.find("general game updates:") != std::string::npos) {
+			gameLines = true;
+			teamALines = false;
+			teamBLines = false;
+			descriptionLines = false;
+		}
+		else if (!foundTeamAUpdates && str.find("team a updates:") != std::string::npos) {
+			teamALines = true;
+			teamBLines = false;
+			gameLines = false;
+			descriptionLines = false;
+		}
+		else if (!foundTeamBUpdates && str.find("team b updates:") != std::string::npos) {
+			teamBLines = true;
+			teamALines = false;
+			gameLines = false;
+			descriptionLines = false;
+		}
+		else if (!foundDescription && str.find("description:") != std::string::npos) {
+			descriptionLines = true;
+			teamALines = false;
+			teamBLines = false;
+			gameLines = false;
+		}
+	}
+	Event e(team_a,team_b,event_name,time,gameUpdates,teamAUpdates,teamBUpdates,description);
+	if (eventByUser.find(username) != eventByUser.end()) {
+		std::queue<Event> eventQueue;
+		eventByUser.insert(make_pair(username,eventQueue));
+	}
+	eventByUser[username].push(e);
 
 }
