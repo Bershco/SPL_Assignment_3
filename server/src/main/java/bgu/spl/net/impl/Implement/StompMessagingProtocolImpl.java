@@ -115,12 +115,13 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             message_id ++;
             String msg = "MESSAGE" + "\n" + getChannel(message) + "\n" + message_id +"\n"+ connections.getSub(owner,getChannel(message))+ "\n" + getBody(message)+ "\n";
             String receipt = "";
+            connections.send(getChannel(message),msg);
             if(hasReceipt(message)){
                 String rec = getReceipt(message);
                 receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec +"\n";
+                connections.send(owner,receipt);
             }
-            connections.send(getChannel(message),msg);
-            connections.send(owner,receipt);
+            
         }
         
     }
@@ -177,13 +178,16 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             if(!connections.unsubscribe(owner,getID(message))){
                 ans = ans +"\n" + message.toString() +"\n" +"----"+"\n" + "you are not subscribed to topic";
                 connections.send(owner, ans);
+                shouldTerminate = true;
+                connections.disconnect(owner);
             }
             else{
                 String receipt = "";
                 if(hasReceipt(message)){
                     receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n";
+                    connections.send(owner,receipt);
                 }
-                connections.send(owner,receipt);
+                
             }
            
         }
@@ -273,21 +277,13 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 if(hasReceipt(message)){
                     rec_id = getReceipt(message);
                     receipt = "RECEIPT" + "\n"+ "receipt-id:"+rec_id +"\n";
+                    connections.send(owner,receipt);
                 }
-                connections.send(owner,receipt);
         }
 
     }
 
-    private boolean noAdditional(int lines, String[] message){
-        int counter = 0; 
-        for(int i =0; i<message.length; i++){
-            if(!message[i].equals("")){
-                counter ++;
-            }
-        }
-        return (counter == lines);
-    }
+   
     
     private int getID(String[] message) {
         String id = "id:";
