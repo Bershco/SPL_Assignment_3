@@ -84,7 +84,7 @@ void AverageMemeEnjoyer::RunKeyboard()
 
 			else if (words[0] == "close_client") {
 				std::cout << "Initiating self-destruction, in\n3" << std::endl;
-				string line("idk how to log out yet"); //TODO check if logged in, and if so - send a disconnect frame, and wait for 'disconnected'
+				string line("idk how to log out yet"); 
 				if (ch.sendFrameAscii(line,'\0'))
 					ch.close();
 				if (isConnected) {
@@ -106,12 +106,10 @@ void AverageMemeEnjoyer::RunKeyboard()
 
 			else {
 				std::cout << "That's not a proper command" << std::endl;
-				//TODO might need to throw an error or smth but seems unlikely
 			}
 
 		}
 		ch.close();
-		//TODO add finishing code here if needed
 }
 
 void AverageMemeEnjoyer::RunSocket()
@@ -228,7 +226,7 @@ void AverageMemeEnjoyer::generateSummary(string game_name, string user, string f
 
 	//The next lines are to insert all proper elements into all proper maps
 	while (!events_reported_by_player.empty()) {
-		Event e = events_reported_by_player.front(); //TODO might need to be something else
+		Event e = events_reported_by_player.front();
 		events_reported_by_player.pop();
 		std::map<string,string> gs = e.get_game_updates();
 		std::map<string,string> tas = e.get_team_a_updates();
@@ -294,7 +292,7 @@ void AverageMemeEnjoyer::generateSummary(string game_name, string user, string f
 	
 	output += "Game event reports:\n";
 	while (!neededLater.empty()) {
-		Event e = neededLater.front(); //TODO might need to be something else
+		Event e = neededLater.front();
 		neededLater.pop();
 		output += e.get_time() + " - " + e.get_name() + "\n\n";
 		output += e.get_discription() + "\n\n\n";
@@ -303,7 +301,6 @@ void AverageMemeEnjoyer::generateSummary(string game_name, string user, string f
 	//The next lines are for outputting the string created into the desired file
 	std::ofstream outputFile;
 	outputFile.open(file_path, std::ios::trunc); //This flag is to make sure the file always gets truncated (as in, we 'koti'im' the file, or just simply - overwriting it if it exists)
-	//TODO make sure this file_path is an actual file path and that the ofstream::open method does what it's supposed to do
 	outputFile << output << std::endl;
 	outputFile.close();
 }
@@ -406,7 +403,6 @@ void AverageMemeEnjoyer::decodeFrameError(string error_frame)
 		error_frame.erase(it);
 	std::cout << error_frame << std::endl;
 	ch.close();
-	//TODO this might need to be more than this, right now it just prints the error frame without the null char
 }
 
 void AverageMemeEnjoyer::decodeFrameMessage(string msg_frame)

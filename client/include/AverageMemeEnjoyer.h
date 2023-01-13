@@ -36,7 +36,7 @@ class AverageMemeEnjoyer {
     void decodeFrameError(string);
 
     
-    std::unordered_map<string,std::queue<Event>> eventByUser; //TODO implement the insertion of the maps to this queue
+    std::unordered_map<string,std::queue<Event>> eventByUser;
     ConnectionHandler ch;
     std::map<int,string> sub_id_to_game_name;
     int sub_id_counter;
