@@ -157,6 +157,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 ans = ans +"\n" + mess +"\n" +"----"+"\n" + "you are not subscribed";
                 hasError = true;
                 shouldTerminate = true;
+                connections.send(owner,ans);
                 connections.disconnect(owner);
             }
            

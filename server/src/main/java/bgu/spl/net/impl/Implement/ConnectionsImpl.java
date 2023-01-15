@@ -46,8 +46,8 @@ public class ConnectionsImpl<T> implements Connections<T>  {
         }  
     }
     public void disconnect(int connectionId){
-        user_Id.remove(connectionId);
-        connectToClient.remove(connectionId);
+        user_Id.remove(new Integer(connectionId));
+        connectToClient.remove(new Integer(connectionId));
         subId.remove(connectionId);
         topics.remove(connectionId);
         for(String top : subscriptions.keySet()){
@@ -62,7 +62,10 @@ public class ConnectionsImpl<T> implements Connections<T>  {
                 }
                 else{ind++;}
             }
-            topicToSub.get(top).remove(ind);
+            if(topicToSub.containsKey(top)){
+                topicToSub.get(top).remove(ind);
+            }
+           
         }
     }
 
